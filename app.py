@@ -125,7 +125,7 @@ def privy_login():
         decoded = jwt.decode(
             token, 
             signing_key.key, 
-            algorithms=["RS256"], 
+            algorithms=["ES256", "RS256"], 
             options={"verify_aud": False, "verify_iss": False}
         )
         user_id = decoded['sub'] 
