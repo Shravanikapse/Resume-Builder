@@ -110,23 +110,7 @@ init_db()
 PRIVY_APP_ID = os.getenv("PRIVY_APP_ID", "cmq6wlxuo00w90ckzc61oibin")
 JWKS_URL = f"https://auth.privy.io/api/v1/apps/{PRIVY_APP_ID}/jwks.json"
 
-def get_privy_public_key(kid):
-    resp = requests.get(JWKS_URL)
-    jwks = resp.json()
-    for key in jwks.get('keys', []):
-        if key['kid'] == kid:
-            # Add padding to base64 encoding if needed
-            e_b64 = key['e'] + '=' * (-len(key['e']) % 4)
-            n_b64 = key['n'] + '=' * (-len(key['n']) % 4)
-            e = int.from_bytes(base64.urlsafe_b64decode(e_b64), 'big')
-            n = int.from_bytes(base64.urlsafe_b64decode(n_b64), 'big')
-            public_key = RSAPublicNumbers(e, n).public_key(default_backend())
-            pem = public_key.public_bytes(
-                encoding=serialization.Encoding.PEM,
-                format=serialization.PublicFormat.SubjectPublicKeyInfo
-            )
-            return pem
-    return None
+jwks_client = jwt.PyJWKClient(JWKS_URL)
 
 @app.route('/privy_login', methods=['POST'])
 def privy_login():
@@ -136,14 +120,8 @@ def privy_login():
         return jsonify({"error": "No token provided"}), 400
         
     try:
-        unverified_header = jwt.get_unverified_header(token)
-        kid = unverified_header['kid']
-        public_key = get_privy_public_key(kid)
-        
-        if not public_key:
-            return jsonify({"error": "Public key not found"}), 401
-            
-        decoded = jwt.decode(token, public_key, algorithms=["RS256"], audience=PRIVY_APP_ID, issuer="privy.io")
+        signing_key = jwks_client.get_signing_key_from_jwt(token)
+        decoded = jwt.decode(token, signing_key.key, algorithms=["RS256"], audience=PRIVY_APP_ID, issuer="privy.io")
         user_id = decoded['sub'] 
         
         try:
