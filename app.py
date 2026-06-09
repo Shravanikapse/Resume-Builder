@@ -182,8 +182,6 @@ def require_login():
 # =================== CORE PAGES ===================
 @app.route('/')
 def landing():
-    if 'user' in session:
-        return redirect(url_for('dashboard'))
     return render_template('landing.html', privy_app_id=PRIVY_APP_ID)
 
 @app.route('/dashboard')
