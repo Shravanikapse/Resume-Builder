@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ name }} - Resume</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        .container {
+            width: 100%;
+            height: 100%;
+            display: table;
+        }
+        .sidebar {
+            width: 32%;
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 30px 25px;
+            display: table-cell;
+            vertical-align: top;
+        }
+        .main {
+            width: 68%;
+            background-color: #ffffff;
+            padding: 30px 35px;
+            display: table-cell;
+            vertical-align: top;
+        }
+        .name {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .contact-info {
+            font-size: 12px;
+            margin-bottom: 30px;
+            color: #bdc3c7;
+        }
+        .sidebar-section {
+            margin-bottom: 25px;
+        }
+        .sidebar-title {
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: uppercase;
+            border-bottom: 2px solid #34495e;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        .main-title {
+            font-size: 18px;
+            font-weight: bold;
+            text-transform: uppercase;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        .item-title {
+            font-weight: bold;
+            font-size: 15px;
+            color: #2980b9;
+        }
+        .item-meta {
+            font-size: 13px;
+            color: #7f8c8d;
+            font-style: italic;
+            margin-bottom: 5px;
+        }
+        .item-desc {
+            margin-bottom: 20px;
+        }
+        ul {
+            padding-left: 15px;
+            margin-top: 5px;
+        }
+        li {
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <div class="name">{{ name }}</div>
+            <div class="contact-info">
+                {% if email %}{{ email }}<br>{% endif %}
+                {% if contact %}{{ contact }}<br>{% endif %}
+                {% if linkedin %}{{ linkedin }}<br>{% endif %}
+                {% if location %}{{ location }}{% endif %}
+            </div>
+            
+            {% if skills %}
+            <div class="sidebar-section">
+                <div class="sidebar-title">Skills</div>
+                <div style="font-size: 13px;">{{ skills }}</div>
+            </div>
+            {% endif %}
+            
+            {% if certifications %}
+            <div class="sidebar-section">
+                <div class="sidebar-title">Certifications</div>
+                <div style="font-size: 13px;">{{ certifications }}</div>
+            </div>
+            {% endif %}
+            
+            {% if achievements %}
+            <div class="sidebar-section">
+                <div class="sidebar-title">Achievements</div>
+                <div style="font-size: 13px;">{{ achievements }}</div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- MAIN CONTENT -->
+        <div class="main">
+            {% if summary %}
+            <div style="margin-bottom: 25px;">
+                <div class="main-title">Professional Summary</div>
+                <div>{{ summary }}</div>
+            </div>
+            {% endif %}
+            
+            {% if experience_title %}
+            <div style="margin-bottom: 25px;">
+                <div class="main-title">Experience</div>
+                <div class="item-title">{{ experience_title }}</div>
+                {% if experience_year %}<div class="item-meta">{{ experience_year }}</div>{% endif %}
+                <div class="item-desc">{{ experience_description }}</div>
+            </div>
+            {% endif %}
+            
+            {% if project_name %}
+            <div style="margin-bottom: 25px;">
+                <div class="main-title">Projects</div>
+                <div class="item-title">{{ project_name }}</div>
+                <div class="item-desc">{{ project_description }}</div>
+            </div>
+            {% endif %}
+            
+            {% if education %}
+            <div style="margin-bottom: 25px;">
+                <div class="main-title">Education</div>
+                <div class="item-title">{{ education }}</div>
+                {% if year %}<div class="item-meta">{{ year }}</div>{% endif %}
+                <div class="item-desc">{{ education_description }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

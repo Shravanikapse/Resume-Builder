@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ name }} - Resume</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 40px;
+            color: #444;
+            font-size: 14px;
+            line-height: 1.5;
+            background-color: #fff;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #16a085;
+            padding-bottom: 20px;
+            margin-bottom: 25px;
+        }
+        .name {
+            font-size: 36px;
+            font-weight: 300;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+        .contact {
+            font-size: 13px;
+            color: #7f8c8d;
+        }
+        .contact span {
+            margin: 0 8px;
+        }
+        .section {
+            margin-bottom: 25px;
+        }
+        .section-title {
+            font-size: 18px;
+            color: #16a085;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        .item-row {
+            display: table;
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        .item-main {
+            display: table-cell;
+            font-weight: bold;
+            font-size: 15px;
+            color: #34495e;
+            text-align: left;
+        }
+        .item-date {
+            display: table-cell;
+            font-size: 13px;
+            color: #95a5a6;
+            text-align: right;
+            vertical-align: top;
+        }
+        .item-desc {
+            margin-bottom: 15px;
+            color: #555;
+        }
+        ul {
+            padding-left: 20px;
+            margin-top: 5px;
+        }
+        li {
+            margin-bottom: 5px;
+        }
+        .two-col {
+            display: table;
+            width: 100%;
+        }
+        .col-half {
+            display: table-cell;
+            width: 50%;
+            vertical-align: top;
+            padding-right: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="name">{{ name }}</div>
+        <div class="contact">
+            {% if email %}<span>{{ email }}</span>{% endif %}
+            {% if contact %}<span>|</span><span>{{ contact }}</span>{% endif %}
+            {% if location %}<span>|</span><span>{{ location }}</span>{% endif %}
+            {% if linkedin %}<span>|</span><span>{{ linkedin }}</span>{% endif %}
+        </div>
+    </div>
+
+    {% if summary %}
+    <div class="section">
+        <div class="section-title">Professional Summary</div>
+        <div>{{ summary }}</div>
+    </div>
+    {% endif %}
+
+    {% if experience_title %}
+    <div class="section">
+        <div class="section-title">Professional Experience</div>
+        <div class="item-row">
+            <div class="item-main">{{ experience_title }}</div>
+            <div class="item-date">{% if experience_year %}{{ experience_year }}{% endif %}</div>
+        </div>
+        <div class="item-desc">{{ experience_description }}</div>
+    </div>
+    {% endif %}
+
+    {% if project_name %}
+    <div class="section">
+        <div class="section-title">Key Projects</div>
+        <div class="item-row">
+            <div class="item-main">{{ project_name }}</div>
+        </div>
+        <div class="item-desc">{{ project_description }}</div>
+    </div>
+    {% endif %}
+
+    <div class="two-col">
+        <div class="col-half">
+            {% if education %}
+            <div class="section">
+                <div class="section-title">Education</div>
+                <div class="item-row">
+                    <div class="item-main">{{ education }}</div>
+                </div>
+                <div style="font-size:13px; color:#95a5a6; margin-bottom:5px;">{% if year %}{{ year }}{% endif %}</div>
+                <div class="item-desc">{{ education_description }}</div>
+            </div>
+            {% endif %}
+        </div>
+        <div class="col-half">
+            {% if skills %}
+            <div class="section">
+                <div class="section-title">Skills</div>
+                <div>{{ skills }}</div>
+            </div>
+            {% endif %}
+            
+            {% if certifications %}
+            <div class="section">
+                <div class="section-title">Certifications</div>
+                <div>{{ certifications }}</div>
+            </div>
+            {% endif %}
+            
+            {% if achievements %}
+            <div class="section">
+                <div class="section-title">Achievements</div>
+                <div>{{ achievements }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+</body>
+</html>

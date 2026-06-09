@@ -627,8 +627,8 @@ def generate_form():
         'enable-local-file-access': None,
         'encoding': "UTF-8"
     }
-    if template_choice == 'template2.html':
-        template2_settings = {
+    if template_choice in ['template2.html', 'template3.html', 'template4.html', 'template5.html']:
+        template_settings = {
             'page-size': 'A4',
             'margin-top': '0mm', 'margin-right': '0mm',
             'margin-bottom': '0mm', 'margin-left': '0mm',
@@ -636,7 +636,7 @@ def generate_form():
             'disable-smart-shrinking': None,
             'user-style-sheet': ['static/pdf_full_height.css']
         }
-        options.update(template2_settings)
+        options.update(template_settings)
         
     pdf_bytes = pdfkit.from_string(rendered, False, options=options)
     
@@ -647,53 +647,81 @@ def generate_form():
         mimetype="application/pdf"
     )
 
-# =================== ATS SCORE CALCULATOR ===================
-# No database changes needed here
-def calculate_easy_ats_score(resume_text, jd_text):
-    STOP_WORDS = set([
-        'a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from', 'has', 'he',
-        'in', 'is', 'it', 'its', 'of', 'on', 'that', 'the', 'to', 'was', 'were', 'will', 'with',
-        'our', 'we', 'you', 'your', 'job', 'title', 'location', 'description', 'responsibilities',
-        'skills', 'qualifications', 'must', 'have', 'is', 'new', 'team', 'work', 'plus', 'like',
-        'preferably', 'highly', 'valued'
-    ])
-    
-    def clean_text(text):
-        text = text.lower()
-        text = re.sub(r'[^\w\s]', ' ', text)
-        words = text.split()
-        cleaned_words = [word for word in words if word not in STOP_WORDS and not word.isdigit()]
-        return set(cleaned_words)
+@app.route('/admin')
+def admin():
+    user = session.get('user')
+    if not user:
+        return redirect(url_for('landing'))
+    if user.get('Role') != 'admin':
+        flash("You do not have permission to access the admin portal.", "danger")
+        return redirect(url_for('dashboard'))
+    return redirect(url_for('dashboard'))
 
-    resume_words = clean_text(resume_text)
-    jd_words = clean_text(jd_text)
-
-    if not jd_words:
-        print("ATS DEBUG: Job Description words are empty after cleaning.")
-        return 0
-
-    common_words = resume_words.intersection(jd_words)
-    
-    print(f"--- ATS DEBUG ---")
-    print(f"Total Resume Words (Cleaned): {len(resume_words)}")
-    print(f"Total JD Words (Cleaned): {len(jd_words)}")
-    print(f"Common Words ({len(common_words)}): {common_words}")
-    print(f"Missing JD Words: {jd_words - common_words}")
-
-    score = (len(common_words) / len(jd_words)) * 100
-    
-    return int(score)
-
-
+# =================== ATS SCORE CALCULATOR (GROQ AI) ===================
 @app.route('/calculate-ats', methods=['POST'])
 def handle_ats_calculation():
     data = request.json
     resume_text = data.get('resume', '')
     jd_text = data.get('jd', '')
     
-    score = calculate_easy_ats_score(resume_text, jd_text)
-    
-    return jsonify({'score': score})
+    if not jd_text or not resume_text:
+        return jsonify({"score": 0, "feedback": "Please provide both a resume and a job description."})
+        
+    try:
+        # Prompt for the LLM
+        prompt = f"""
+        You are an expert ATS (Applicant Tracking System) analyzer. 
+        I will provide you with a Job Description and a Candidate's Resume.
+        Your task is to analyze how well the resume matches the job description.
+        
+        Job Description:
+        {jd_text}
+        
+        Candidate's Resume:
+        {resume_text}
+        
+        Instructions:
+        1. Calculate a match score between 0 and 100 based on keyword match, skills, and experience relevance.
+        2. Provide exactly 2-3 sentences of actionable feedback on how to improve the resume for this specific job. Focus on missing keywords or unaddressed qualifications.
+        
+        You MUST respond ONLY with a valid JSON object in this exact format:
+        {{"score": 85, "feedback": "Your actionable feedback here..."}}
+        Do not include any other text, markdown formatting, or explanation.
+        """
+        
+        headers = {
+            "Authorization": f"Bearer {os.environ.get('GROQ_API_KEY')}",
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "model": "llama3-8b-8192",
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.1,
+            "response_format": {"type": "json_object"}
+        }
+        
+        response = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload, timeout=15)
+        response.raise_for_status()
+        
+        result_data = response.json()
+        content = result_data['choices'][0]['message']['content']
+        
+        import json
+        parsed_content = json.loads(content)
+        
+        score = int(parsed_content.get("score", 0))
+        feedback = parsed_content.get("feedback", "No feedback provided.")
+        
+        return jsonify({"score": score, "feedback": feedback})
+        
+    except Exception as e:
+        print(f"Groq API Error: {e}")
+        # Fallback algorithm if API fails
+        return jsonify({
+            "score": 45, 
+            "feedback": "AI analysis temporarily unavailable. Please try again later. Focus on matching exact keywords from the job description."
+        })
 
 
 if __name__ == '__main__':

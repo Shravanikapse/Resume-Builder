@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ name }} - Resume</title>
+    <style>
+        body {
+            font-family: 'Georgia', serif;
+            margin: 0;
+            padding: 40px 50px;
+            color: #222;
+            font-size: 14px;
+            line-height: 1.6;
+            background-color: #fdfbf7;
+        }
+        .header {
+            margin-bottom: 30px;
+        }
+        .name {
+            font-size: 42px;
+            font-weight: 900;
+            color: #111;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+            border-bottom: 4px solid #111;
+            padding-bottom: 10px;
+        }
+        .contact {
+            font-size: 13px;
+            color: #555;
+            font-family: 'Helvetica Neue', sans-serif;
+            margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .contact span {
+            margin-right: 15px;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section-title {
+            font-size: 20px;
+            color: #111;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            font-weight: 900;
+            display: inline-block;
+            background-color: #111;
+            color: #fff;
+            padding: 5px 15px;
+        }
+        .item {
+            margin-bottom: 20px;
+            padding-left: 20px;
+            border-left: 3px solid #ddd;
+        }
+        .item-main {
+            font-weight: bold;
+            font-size: 16px;
+            color: #000;
+            font-family: 'Helvetica Neue', sans-serif;
+        }
+        .item-date {
+            font-size: 13px;
+            color: #777;
+            font-family: 'Helvetica Neue', sans-serif;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .item-desc {
+            color: #333;
+        }
+        .summary-text {
+            font-size: 16px;
+            font-style: italic;
+            color: #444;
+            border-left: 4px solid #111;
+            padding-left: 20px;
+            margin-bottom: 35px;
+        }
+        .grid {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+        .grid-cell {
+            display: table-cell;
+            vertical-align: top;
+        }
+        .grid-left {
+            width: 60%;
+            padding-right: 30px;
+        }
+        .grid-right {
+            width: 40%;
+        }
+        ul {
+            padding-left: 20px;
+            margin-top: 5px;
+        }
+        li {
+            margin-bottom: 5px;
+        }
+        .box {
+            border: 2px solid #111;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .box-title {
+            font-family: 'Helvetica Neue', sans-serif;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="name">{{ name }}</div>
+        <div class="contact">
+            {% if email %}<span>E: {{ email }}</span>{% endif %}
+            {% if contact %}<span>P: {{ contact }}</span>{% endif %}
+            {% if location %}<span>L: {{ location }}</span>{% endif %}
+            {% if linkedin %}<span>W: {{ linkedin }}</span>{% endif %}
+        </div>
+    </div>
+
+    {% if summary %}
+    <div class="summary-text">
+        {{ summary }}
+    </div>
+    {% endif %}
+
+    <div class="grid">
+        <div class="grid-cell grid-left">
+            {% if experience_title %}
+            <div class="section">
+                <div class="section-title">Experience</div>
+                <div class="item">
+                    <div class="item-main">{{ experience_title }}</div>
+                    {% if experience_year %}<div class="item-date">{{ experience_year }}</div>{% endif %}
+                    <div class="item-desc">{{ experience_description }}</div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if project_name %}
+            <div class="section">
+                <div class="section-title">Projects</div>
+                <div class="item">
+                    <div class="item-main">{{ project_name }}</div>
+                    <div class="item-desc">{{ project_description }}</div>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if education %}
+            <div class="section">
+                <div class="section-title">Education</div>
+                <div class="item">
+                    <div class="item-main">{{ education }}</div>
+                    {% if year %}<div class="item-date">{{ year }}</div>{% endif %}
+                    <div class="item-desc">{{ education_description }}</div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="grid-cell grid-right">
+            {% if skills %}
+            <div class="box">
+                <div class="box-title">Skills</div>
+                <div style="font-family: 'Helvetica Neue', sans-serif; font-size: 13px;">{{ skills }}</div>
+            </div>
+            {% endif %}
+            
+            {% if certifications %}
+            <div class="box">
+                <div class="box-title">Certifications</div>
+                <div style="font-family: 'Helvetica Neue', sans-serif; font-size: 13px;">{{ certifications }}</div>
+            </div>
+            {% endif %}
+            
+            {% if achievements %}
+            <div class="box">
+                <div class="box-title">Achievements</div>
+                <div style="font-family: 'Helvetica Neue', sans-serif; font-size: 13px;">{{ achievements }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+</body>
+</html>
