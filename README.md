@@ -23,6 +23,7 @@ A comprehensive, enterprise-grade web application built to streamline the resume
 - **AI-Powered ATS Evaluator:** Integrates with the **Groq AI LLaMA-3 Model** to analyze resumes against specific Job Descriptions. It calculates a compatibility score (0-100) and provides actionable feedback on missing keywords or formatting improvements.
 - **Multiple Layout Templates:** Offers 5 distinct, professionally designed template layouts to suit various industries (e.g., Minimalist, Dark Sidebar, Creative Bold).
 - **History Tracking & Management:** Automatically saves generated resumes securely to the database, allowing users to revisit, view, and re-download past iterations.
+- **Fully Mobile Responsive:** The entire platform, from the builder to the dashboard, is optimized for seamless performance and layout integrity across all mobile and desktop devices.
 
 ## Technology Stack
 
