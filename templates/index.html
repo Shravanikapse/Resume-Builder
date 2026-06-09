@@ -53,12 +53,17 @@
 <body class="h-screen flex flex-col bg-background overflow-hidden font-body text-foreground">
 
   <!-- Top bar -->
-  <div class="flex items-center justify-between border-b border-border px-6 py-3 bg-white z-10 shrink-0">
-    <a href="{{ url_for('landing') }}" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
-      <div class="h-8 w-8 rounded bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg">R</div>
-      <span class="font-semibold text-lg tracking-tight text-foreground">Resume Builder</span>
-      <i data-lucide="chevron-down" class="h-4 w-4 text-muted-foreground ml-1"></i>
-    </a>
+  <div class="flex items-center justify-between border-b border-border px-4 md:px-6 py-3 bg-white z-10 shrink-0">
+    <div class="flex items-center gap-3">
+      <!-- Mobile menu button -->
+      <button id="mobile-menu-btn" class="lg:hidden p-1.5 -ml-1.5 text-muted-foreground hover:text-foreground rounded-md hover:bg-secondary transition-colors">
+        <i data-lucide="menu" class="h-5 w-5"></i>
+      </button>
+      <a href="{{ url_for('landing') }}" class="flex items-center gap-2 md:gap-3 hover:opacity-80 transition-opacity">
+        <div class="h-8 w-8 rounded bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg">R</div>
+        <span class="font-semibold text-lg tracking-tight text-foreground hidden sm:block">Resume Builder</span>
+      </a>
+    </div>
     
     <div class="hidden md:flex items-center gap-2 px-4 py-2 rounded-md border border-border bg-muted/50 w-80 text-muted-foreground text-sm">
       <i data-lucide="search" class="h-4 w-4"></i>
@@ -66,29 +71,39 @@
       <span class="ml-auto text-xs border border-border rounded px-1.5 py-0.5">⌘K</span>
     </div>
     
-    <div class="flex items-center gap-5">
-      <a href="{{ url_for('form') }}" class="bg-accent text-accent-foreground px-4 py-2 rounded-md font-medium flex items-center gap-2 text-sm hover:bg-accent/90 transition-colors">
-        <i data-lucide="plus" class="h-4 w-4"></i> New Resume
+    <div class="flex items-center gap-3 md:gap-5">
+      <a href="{{ url_for('form') }}" class="bg-accent text-accent-foreground px-3 py-2 md:px-4 md:py-2 rounded-md font-medium flex items-center gap-1.5 md:gap-2 text-sm hover:bg-accent/90 transition-colors">
+        <i data-lucide="plus" class="h-4 w-4"></i> <span class="hidden sm:inline">New Resume</span>
       </a>
-      <i data-lucide="bell" class="h-5 w-5 text-muted-foreground cursor-pointer hover:text-foreground transition-colors"></i>
-      <div class="h-8 w-8 rounded-full bg-secondary flex items-center justify-center text-sm font-medium border border-border relative group cursor-pointer">
-        {{ session.user.Username[0]|upper }}
+      <i data-lucide="bell" class="h-5 w-5 text-muted-foreground cursor-pointer hover:text-foreground transition-colors hidden sm:block"></i>
+      <div class="relative">
+        <div id="profile-btn" class="h-10 w-10 md:h-8 md:w-8 rounded-full bg-secondary flex items-center justify-center text-sm font-medium border border-border cursor-pointer">
+          {{ session.user.Username[0]|upper }}
+        </div>
         <!-- Dropdown Menu -->
-        <div class="absolute right-0 top-full mt-2 w-48 bg-white border border-border rounded-md shadow-lg hidden group-hover:block z-50">
-          <div class="px-4 py-2 text-xs text-muted-foreground border-b border-border">{{ session.user.Role|capitalize }}</div>
-          <a href="{{ url_for('logout') }}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">Log Out</a>
+        <div id="profile-dropdown" class="absolute right-0 top-full mt-2 w-48 bg-white border border-border rounded-md shadow-lg hidden z-50">
+          <div class="px-4 py-3 text-xs text-muted-foreground border-b border-border">{{ session.user.Role|capitalize }}</div>
+          <a href="{{ url_for('logout') }}" class="block px-4 py-3 text-sm text-red-600 hover:bg-red-50">Log Out</a>
         </div>
       </div>
     </div>
   </div>
   
+  <!-- Mobile Sidebar Overlay -->
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-30 hidden lg:hidden"></div>
+
   <!-- Body Layout -->
-  <div class="flex flex-1 overflow-hidden">
+  <div class="flex flex-1 overflow-hidden relative">
     
     <!-- Sidebar -->
-    <div class="w-56 border-r border-border bg-white flex flex-col py-6 shrink-0 hidden lg:flex">
-      <div class="px-5 mb-4 text-xs font-semibold text-muted-foreground tracking-wider">MENU</div>
-      <div class="flex flex-col gap-1 px-3">
+    <div id="sidebar" class="absolute lg:static inset-y-0 left-0 z-40 w-64 lg:w-56 border-r border-border bg-white flex-col py-6 shrink-0 transform -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-in-out flex shadow-2xl lg:shadow-none h-full">
+      <div class="flex items-center justify-between px-5 mb-4 text-xs font-semibold text-muted-foreground tracking-wider">
+        <span>MENU</span>
+        <button id="close-sidebar-btn" class="lg:hidden text-muted-foreground hover:text-foreground">
+          <i data-lucide="x" class="h-4 w-4"></i>
+        </button>
+      </div>
+      <div class="flex flex-col gap-1 px-3 overflow-y-auto">
         <a href="{{ url_for('dashboard') }}" class="flex items-center gap-3 px-3 py-2 bg-secondary text-foreground rounded-md font-medium text-sm transition-colors">
           <i data-lucide="home" class="h-4 w-4"></i> Home
         </a>
@@ -211,17 +226,12 @@
             </p>
             
             {% if google_form_link %}
-            <div class="flex flex-col items-center justify-center p-6 bg-secondary/50 rounded-lg border border-border mb-4">
-                <img class="w-40 h-40 bg-white p-2 rounded-md shadow-sm mb-4" 
-                     src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={{ google_form_link | urlencode }}" 
-                     alt="QR Code" />
-                <p class="text-sm font-medium text-foreground">Autogenerated QR</p>
-                <p class="text-xs text-muted-foreground text-center mt-1">Students can scan this to open the form.</p>
-            </div>
-            
-            <button onclick="copyFormLink('{{ google_form_link }}')" class="w-full bg-white border border-border text-foreground font-medium py-2.5 rounded-md text-sm hover:bg-secondary transition-colors shadow-sm flex items-center justify-center gap-2">
-              <i data-lucide="copy" class="h-4 w-4 text-muted-foreground"></i> Copy Shareable Link
+            <button onclick="copyFormLink('{{ google_form_link }}')" class="w-full bg-white border border-border text-foreground font-medium py-3 rounded-md text-sm hover:bg-secondary transition-colors shadow-sm flex items-center justify-center gap-2">
+              <i data-lucide="copy" class="h-4 w-4 text-muted-foreground"></i> Copy Shareable Form Link
             </button>
+            <div class="mt-4 p-4 bg-secondary/50 rounded-lg border border-border text-xs text-muted-foreground break-all text-center">
+              {{ google_form_link }}
+            </div>
             {% else %}
             <div class="flex items-center justify-center flex-1 bg-secondary border border-border border-dashed rounded-lg">
                 <p class="text-sm text-muted-foreground">No Google Form link configured.</p>
@@ -356,6 +366,42 @@
   <script>
     lucide.createIcons();
     
+    // Sidebar toggle logic
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+    
+    function openSidebar() {
+      sidebar.classList.remove('-translate-x-full');
+      sidebarOverlay.classList.remove('hidden');
+    }
+    
+    function closeSidebar() {
+      sidebar.classList.add('-translate-x-full');
+      sidebarOverlay.classList.add('hidden');
+    }
+    
+    mobileMenuBtn.addEventListener('click', openSidebar);
+    closeSidebarBtn.addEventListener('click', closeSidebar);
+    sidebarOverlay.addEventListener('click', closeSidebar);
+    
+    // Profile dropdown toggle logic
+    const profileBtn = document.getElementById('profile-btn');
+    const profileDropdown = document.getElementById('profile-dropdown');
+    
+    profileBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      profileDropdown.classList.toggle('hidden');
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!profileDropdown.contains(e.target) && !profileBtn.contains(e.target)) {
+        profileDropdown.classList.add('hidden');
+      }
+    });
+
     function copyFormLink(link) {
         if (link) {
             navigator.clipboard.writeText(link).then(() => {
