@@ -137,7 +137,8 @@ def privy_login():
             c.execute("SELECT * FROM users WHERE username=%s", (user_id,))
             user = c.fetchone()
             
-            is_admin = email.lower() == 'shravanikapse95@gmail.com'
+            admin_emails = ['shravanikapse95@gmail.com', 'sonishriyash@gmail.com']
+            is_admin = email.lower() in admin_emails
             
             if not user:
                 hashed_password = generate_password_hash("privy_dummy_pass")
