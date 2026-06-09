@@ -567,11 +567,11 @@ def generate_form():
 
     resume_data = {
         "name": request.form.get("name", "").strip(),
-        "contact": request.form.get("contact"),
-        "email": request.form.get("email"),
-        "linkedin": request.form.get("linkedin"),
-        "location": request.form.get("location"),
-        "summary": request.form.get("summary"),
+        "contact": request.form.get("contact", ""),
+        "email": request.form.get("email", ""),
+        "linkedin": request.form.get("linkedin", ""),
+        "location": request.form.get("location", ""),
+        "summary": request.form.get("summary", ""),
         "skills": [s.strip() for s in request.form.get("skills", "").split(";") if s.strip()],
         "projects": [], "experience": [], "achievements": [], "certifications": [], "education": [],
         "photo_url": photo_url 
