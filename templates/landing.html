@@ -372,17 +372,26 @@
                     setIsLoggingIn(true);
                     try {
                         const token = await getAccessToken();
+                        if (!token) {
+                            setIsLoggingIn(false);
+                            return;
+                        }
+                        
                         const response = await fetch('/privy_login', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ access_token: token })
                         });
+                        
                         const result = await response.json();
                         if (result.success) {
                             window.location.href = '/dashboard';
+                        } else {
+                            console.error("Backend Error: ", result.error);
+                            setIsLoggingIn(false);
                         }
                     } catch (error) {
-                        console.error(error);
+                        console.error("Network or Fetch Error: ", error);
                         setIsLoggingIn(false);
                     }
                 }
