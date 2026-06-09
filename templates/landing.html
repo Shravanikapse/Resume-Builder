@@ -345,7 +345,7 @@
     import { PrivyProvider, usePrivy } from '@privy-io/react-auth';
 
     function AuthHandler() {
-        const { login, ready, authenticated, getAccessToken } = usePrivy();
+        const { login, ready, authenticated, getAccessToken, user } = usePrivy();
         const [isLoggingIn, setIsLoggingIn] = useState(false);
 
         useEffect(() => {
@@ -377,10 +377,12 @@
                             return;
                         }
                         
+                        const email = user?.email?.address || user?.apple?.email || user?.google?.email || '';
+                        
                         const response = await fetch('/privy_login', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ access_token: token })
+                            body: JSON.stringify({ access_token: token, email: email })
                         });
                         
                         const result = await response.json();

@@ -116,6 +116,7 @@ jwks_client = jwt.PyJWKClient(JWKS_URL)
 def privy_login():
     data = request.json
     token = data.get('access_token')
+    email = data.get('email', '')
     if not token:
         return jsonify({"error": "No token provided"}), 400
         
@@ -136,13 +137,20 @@ def privy_login():
             c.execute("SELECT * FROM users WHERE username=%s", (user_id,))
             user = c.fetchone()
             
+            is_admin = email.lower() == 'shravanikapse95@gmail.com'
+            
             if not user:
                 hashed_password = generate_password_hash("privy_dummy_pass")
-                c.execute("INSERT INTO users (username, password, role) VALUES (%s, %s, 'student')", (user_id, hashed_password))
+                role = 'admin' if is_admin else 'student'
+                c.execute("INSERT INTO users (username, password, role) VALUES (%s, %s, %s)", (user_id, hashed_password, role))
                 conn.commit()
                 
                 c.execute("SELECT * FROM users WHERE username=%s", (user_id,))
                 user = c.fetchone()
+            elif is_admin and user['role'] != 'admin':
+                c.execute("UPDATE users SET role='admin' WHERE id=%s", (user['id'],))
+                conn.commit()
+                user['role'] = 'admin'
                 
             c.close()
             conn.close()
