@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Resume - Resume Builder</title>
+  
+  <link rel="stylesheet" href="{{ url_for('static', filename='saas_style.css') }}">
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            background: 'hsl(var(--background))',
+            foreground: 'hsl(var(--foreground))',
+            primary: {
+              DEFAULT: 'hsl(var(--primary))',
+              foreground: 'hsl(var(--primary-foreground))',
+            },
+            secondary: {
+              DEFAULT: 'hsl(var(--secondary))',
+              foreground: 'hsl(var(--secondary-foreground))',
+            },
+            muted: {
+              DEFAULT: 'hsl(var(--muted))',
+              foreground: 'hsl(var(--muted-foreground))',
+            },
+            accent: {
+              DEFAULT: 'hsl(var(--accent))',
+              foreground: 'hsl(var(--accent-foreground))',
+            },
+            border: 'hsl(var(--border))',
+            ring: 'hsl(var(--ring))',
+          },
+          borderRadius: {
+            lg: 'var(--radius)',
+            md: 'calc(var(--radius) - 2px)',
+            sm: 'calc(var(--radius) - 4px)',
+          },
+          fontFamily: {
+            display: ['var(--font-display)'],
+            body: ['var(--font-body)'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <style>
+    /* Styling for the ATS progress bar animation */
+    #ats-progress-bar {
+      transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+  </style>
+</head>
+<body class="h-screen flex flex-col bg-background overflow-hidden font-body text-foreground">
+
+  <!-- Top bar -->
+  <div class="flex items-center justify-between border-b border-border px-6 py-3 bg-white z-10 shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="h-8 w-8 rounded bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg">R</div>
+      <span class="font-semibold text-lg tracking-tight">Resume Builder</span>
+      <i data-lucide="chevron-down" class="h-4 w-4 text-muted-foreground ml-1"></i>
+    </div>
+    
+    <div class="hidden md:flex items-center gap-2 px-4 py-2 rounded-md border border-border bg-muted/50 w-80 text-muted-foreground text-sm">
+      <i data-lucide="search" class="h-4 w-4"></i>
+      <span>Search resumes, templates...</span>
+      <span class="ml-auto text-xs border border-border rounded px-1.5 py-0.5">⌘K</span>
+    </div>
+    
+    <div class="flex items-center gap-5">
+      <a href="{{ url_for('dashboard') }}" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2">
+        <i data-lucide="layout-dashboard" class="h-4 w-4"></i> Dashboard
+      </a>
+      <i data-lucide="bell" class="h-5 w-5 text-muted-foreground cursor-pointer hover:text-foreground transition-colors"></i>
+      <div class="h-8 w-8 rounded-full bg-secondary flex items-center justify-center text-sm font-medium border border-border relative group cursor-pointer">
+        {{ session.user.Username[0]|upper if session.user else 'U' }}
+        <!-- Dropdown Menu -->
+        <div class="absolute right-0 top-full mt-2 w-48 bg-white border border-border rounded-md shadow-lg hidden group-hover:block z-50">
+          <div class="px-4 py-2 text-xs text-muted-foreground border-b border-border">{{ session.user.Role|capitalize if session.user else 'User' }}</div>
+          <a href="{{ url_for('logout') }}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">Log Out</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Body Layout -->
+  <div class="flex flex-1 overflow-hidden">
+    
+    <!-- Sidebar -->
+    <div class="w-56 border-r border-border bg-white flex flex-col py-6 shrink-0 hidden lg:flex">
+      <div class="px-5 mb-4 text-xs font-semibold text-muted-foreground tracking-wider">MENU</div>
+      <div class="flex flex-col gap-1 px-3">
+        <a href="{{ url_for('dashboard') }}" class="flex items-center gap-3 px-3 py-2 text-muted-foreground hover:bg-secondary hover:text-foreground rounded-md text-sm transition-colors">
+          <i data-lucide="home" class="h-4 w-4"></i> Home
+        </a>
+        <a href="{{ url_for('form') }}" class="flex items-center gap-3 px-3 py-2 bg-secondary text-foreground rounded-md font-medium text-sm transition-colors">
+          <i data-lucide="plus-circle" class="h-4 w-4"></i> Create Resume
+        </a>
+        <a href="{{ url_for('history') }}" class="flex items-center gap-3 px-3 py-2 text-muted-foreground hover:bg-secondary hover:text-foreground rounded-md text-sm transition-colors">
+          <i data-lucide="clock" class="h-4 w-4"></i> History
+        </a>
+      </div>
+      
+      <div class="px-5 mt-8 mb-4 text-xs font-semibold text-muted-foreground tracking-wider">TOOLS</div>
+      <div class="flex flex-col gap-1 px-3">
+        <div class="flex items-center justify-between px-3 py-2 text-muted-foreground hover:bg-secondary hover:text-foreground rounded-md text-sm cursor-pointer transition-colors">
+          <div class="flex items-center gap-3">
+            <i data-lucide="layout-template" class="h-4 w-4"></i> Templates
+          </div>
+          <i data-lucide="chevron-right" class="h-4 w-4"></i>
+        </div>
+        <div class="flex items-center gap-3 px-3 py-2 text-muted-foreground hover:bg-secondary hover:text-foreground rounded-md text-sm cursor-pointer transition-colors" onclick="document.getElementById('ats-section').scrollIntoView({behavior: 'smooth'})">
+          <i data-lucide="target" class="h-4 w-4"></i> ATS Checker
+        </div>
+      </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="flex-1 bg-secondary/30 p-6 md:p-10 overflow-y-auto">
+      <div class="max-w-4xl mx-auto flex flex-col gap-8">
+        
+        <div>
+          <h2 class="text-3xl font-display text-foreground tracking-tight flex items-center gap-3">
+            <i data-lucide="file-plus-2" class="h-7 w-7 text-accent"></i>
+            Interactive Resume Builder
+          </h2>
+          <p class="text-muted-foreground mt-1 text-sm">
+            Fill out the fields below. Once complete, you can test your ATS match score or compile directly to PDF.
+          </p>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div id="flash-messages-container" class="flex flex-col gap-3">
+            {% for category, message in messages %}
+            <div class="flex items-center justify-between px-4 py-3 rounded-md text-sm border {% if category == 'success' %}bg-green-50 border-green-200 text-green-700{% else %}bg-red-50 border-red-200 text-red-700{% endif %}">
+                <span>{{ message }}</span>
+                <button onclick="this.parentElement.remove();" class="opacity-70 hover:opacity-100">&times;</button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+        
+        <div class="bg-white border border-border rounded-xl shadow-sm p-8">
+            <form action="/generate_form" method="POST" enctype="multipart/form-data" onsubmit="return validateResumeForm(event)" class="flex flex-col gap-8">
+                
+                <!-- Section: Personal Details -->
+                <div>
+                    <h3 class="text-lg font-semibold text-foreground border-b border-border pb-2 mb-4">Personal Details</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-sm font-medium text-foreground">Full Name <span class="text-red-500">*</span></label>
+                            <input type="text" name="name" required placeholder="John Doe" class="w-full px-4 py-2.5 bg-secondary border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all">
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-sm font-medium text-foreground">Email Address <span class="text-red-500">*</span></label>
+                            <input type="email" name="email" required placeholder="johndoe@example.com" class="w-full px-4 py-2.5 bg-secondary border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all">
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-sm font-medium text-foreground">Contact Number</label>
+                            <input type="text" name="contact" placeholder="+1 (555) 019-2834" class="w-full px-4 py-2.5 bg-secondary border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all">
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-sm font-medium text-foreground">LinkedIn URL</label>
+                            <input type="text" name="linkedin" placeholder="linkedin.com/in/username" class="w-full px-4 py-2.5 bg-secondary border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all">
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-sm font-medium text-foreground">Location (City, Country)</label>
+                            <input type="text" name="location" placeholder="New York, USA" class="w-full px-4 py-2.5 bg-secondary border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all">
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-sm font-medium text-foreground">Profile Photo <span class="text-muted-foreground font-normal">(Modern Template only)</span></label>
+                            <input type="file" name="profile_photo" accept="image/png, image/jpeg, image/jpg" class="w-full text-sm text-foreground bg-secondary border border-dashed border-border rounded-md file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 transition-all">
+                        </div>
+                        <div class="col-span-1 md:col-span-2 flex flex-col gap-1.5">
+                            <label class="text-sm font-medium text-foreground">Professional Summary</label>
+                            <textarea name="summary" rows="4" placeholder="Write a short summary of your background, experience, and key accomplishments..." class="w-full px-4 py-2.5 bg-secondary border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all resize-y"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Education -->
+                <div>
+                    <h3 class="text-lg font-semibold text-foreground border-b border-border pb-2 mb-4">Education</h3>
+                    <div class="flex flex-col gap-5">
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-sm font-medium text-foreground">Degrees / Programs</label>
+                            <input type="text" name="education" placeholder="B.S. Computer Science; High School Diploma" class="w-full px-4 py-2.5 bg-secondary border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all">
+                            <p class="text-xs text-muted-foreground mt-0.5">Separate multiple entries with a semicolon (;)</p>
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-sm font-medium text-foreground">Institutions & Details</label>
+                            <input type="text" name="education_description" placeholder="Stanford University - GPA 3.9; Central High School" class="w-full px-4 py-2.5 bg-secondary border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all">
+                            <p class="text-xs text-muted-foreground mt-0.5">Align order with the degrees listed above. Separate entries with a semicolon (;)</p>
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-sm font-medium text-foreground">Years of Completion</label>
+                            <input type="text" name="year" placeholder="2022 - 2026; 2018 - 2022" class="w-full px-4 py-2.5 bg-secondary border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Skills -->
+                <div>
+                    <h3 class="text-lg font-semibold text-foreground border-b border-border pb-2 mb-4">Technical Skills</h3>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-sm font-medium text-foreground">Skills & Technologies</label>
+                        <input type="text" name="skills" placeholder="Python; Javascript; SQL; Flask; React; Git; AWS" class="w-full px-4 py-2.5 bg-secondary border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all">
+                        <p class="text-xs text-muted-foreground mt-0.5">Separate individual skills with a semicolon (;)</p>
+                    </div>
+                </div>
+
+                <!-- Section: Projects -->
+                <div>
+                    <h3 class="text-lg font-semibold text-foreground border-b border-border pb-2 mb-4">Academic & Personal Projects</h3>
+                    <div class="flex flex-col gap-5">
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-sm font-medium text-foreground">Project Titles</label>
+                            <input type="text" name="project_name" placeholder="E-Commerce API; Portfolio Website" class="w-full px-4 py-2.5 bg-secondary border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all">
+                            <p class="text-xs text-muted-foreground mt-0.5">Separate project titles with a semicolon (;)</p>
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-sm font-medium text-foreground">Project Descriptions</label>
+                            <textarea name="project_description" rows="3" placeholder="Built REST APIs using Flask-RESTful with PostgreSQL database integration; Coded static responsive layout pages using CSS Grid and Flexbox" class="w-full px-4 py-2.5 bg-secondary border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"></textarea>
+                            <p class="text-xs text-muted-foreground mt-0.5">Align order with project titles. Separate descriptions with a semicolon (;)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Experience -->
+                <div>
+                    <h3 class="text-lg font-semibold text-foreground border-b border-border pb-2 mb-4">Professional Experience</h3>
+                    <div class="flex flex-col gap-5">
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-sm font-medium text-foreground">Experience Job Titles</label>
+                            <input type="text" name="experience_title" placeholder="Software Engineer Intern; Coding Instructor" class="w-full px-4 py-2.5 bg-secondary border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all">
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-sm font-medium text-foreground">Experience Descriptions</label>
+                            <textarea name="experience_description" rows="3" placeholder="Assisted with backend integrations and unit testing; Taught high school students Python syntax foundations" class="w-full px-4 py-2.5 bg-secondary border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"></textarea>
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-sm font-medium text-foreground">Experience Timelines</label>
+                            <input type="text" name="experience_year" placeholder="Summer 2025; 2023 - 2024" class="w-full px-4 py-2.5 bg-secondary border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Accomplishments -->
+                <div>
+                    <h3 class="text-lg font-semibold text-foreground border-b border-border pb-2 mb-4">Accomplishments & Certifications</h3>
+                    <div class="flex flex-col gap-5">
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-sm font-medium text-foreground">Awards & Achievements</label>
+                            <textarea name="achievements" rows="3" placeholder="First Place in College Hackathon; Dean's Honor Roll List 2024; Awarded Outstanding Student of the Year" class="w-full px-4 py-2.5 bg-secondary border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"></textarea>
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-sm font-medium text-foreground">Certifications</label>
+                            <textarea name="certifications" rows="2" placeholder="AWS Certified Solutions Architect-Associate Level; Cisco CCNA-Network Systems Foundations" class="w-full px-4 py-2.5 bg-secondary border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submission Section -->
+                <div class="pt-6 border-t border-border flex flex-col md:flex-row items-end md:items-center justify-between gap-6">
+                    <div class="w-full md:w-1/2 flex flex-col gap-1.5">
+                        <label class="text-sm font-medium text-foreground">Layout Template</label>
+                        <select name="template_choice" class="w-full px-4 py-2.5 bg-secondary border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all">
+                            <option value="template1.html">Template 1 (Classic Corporate)</option>
+                            <option value="template2.html">Template 2 (Modern Split Column)</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="w-full md:w-auto bg-primary text-primary-foreground font-medium px-8 py-2.5 rounded-md text-sm hover:bg-primary/90 transition-colors shadow-sm flex items-center justify-center gap-2 shrink-0">
+                        <i data-lucide="file-check-2" class="h-4 w-4"></i> Compile PDF Resume
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ATS Checker Tool -->
+        <div id="ats-section" class="bg-accent/5 border border-accent/20 rounded-xl shadow-sm p-8 mb-10">
+            <h3 class="text-lg font-semibold text-accent flex items-center gap-2 mb-4">
+                <i data-lucide="scan" class="h-5 w-5"></i> ATS Keyword Match Analysis
+            </h3>
+            <p class="text-sm text-muted-foreground mb-6">
+                Paste the target job description below to cross-analyze keyword matches with your current input details above.
+            </p>
+            
+            <div class="flex flex-col gap-4">
+                <textarea id="job-description-text" rows="5" placeholder="Paste the job posting description here..." class="w-full px-4 py-3 bg-white border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all resize-y shadow-sm"></textarea>
+                
+                <button type="button" id="ats-check-btn" onclick="getAtsScore()" class="self-start bg-accent text-accent-foreground font-medium px-6 py-2.5 rounded-md text-sm hover:bg-accent/90 transition-colors shadow-sm flex items-center gap-2">
+                    <i data-lucide="bar-chart-2" class="h-4 w-4"></i> Run Match Score Analysis
+                </button>
+            </div>
+
+            <!-- Dynamic Results View -->
+            <div id="ats-progress-container" class="mt-8 bg-white border border-border rounded-lg p-5 shadow-sm" style="display: none;">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="font-medium text-sm text-foreground">ATS Score Match Rate</span>
+                    <span id="ats-percentage-text" class="font-bold text-lg">0%</span>
+                </div>
+                <div class="h-3 w-full bg-secondary rounded-full overflow-hidden border border-border">
+                    <div id="ats-progress-bar" class="h-full bg-accent w-0 rounded-full"></div>
+                </div>
+                <p id="ats-feedback" class="mt-4 text-sm text-muted-foreground leading-relaxed"></p>
+            </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    // ATS Calculation Script
+    async function getAtsScore() {
+        const checkBtn = document.getElementById('ats-check-btn');
+        const progressContainer = document.getElementById('ats-progress-container');
+        const progressBar = document.getElementById('ats-progress-bar');
+        const percentageText = document.getElementById('ats-percentage-text');
+        const feedbackText = document.getElementById('ats-feedback');
+
+        // Gather input fields values
+        const name = document.querySelector('[name="name"]').value;
+        const email = document.querySelector('[name="email"]').value;
+        const contact = document.querySelector('[name="contact"]').value;
+        const linkedin = document.querySelector('[name="linkedin"]').value;
+        const location = document.querySelector('[name="location"]').value;
+        const summary = document.querySelector('[name="summary"]').value;
+        const education = document.querySelector('[name="education"]').value;
+        const education_desc = document.querySelector('[name="education_description"]').value;
+        const edu_year = document.querySelector('[name="year"]').value;
+        const skills = document.querySelector('[name="skills"]').value;
+        const project_name = document.querySelector('[name="project_name"]').value;
+        const project_desc = document.querySelector('[name="project_description"]').value;
+        const exp_title = document.querySelector('[name="experience_title"]').value;
+        const exp_desc = document.querySelector('[name="experience_description"]').value;
+        const exp_year = document.querySelector('[name="experience_year"]').value;
+        const achievements = document.querySelector('[name="achievements"]').value;
+        const certifications = document.querySelector('[name="certifications"]').value;
+
+        const resumeText = [
+            name, email, contact, linkedin, location, summary,
+            education, education_desc, edu_year,
+            skills,
+            project_name, project_desc,
+            exp_title, exp_desc, exp_year,
+            achievements, certifications
+        ].join(' ');
+
+        const jdText = document.getElementById('job-description-text').value.trim();
+        if (!jdText) {
+            alert('Please paste a Job Description first to analyze match score.');
+            return;
+        }
+
+        // Show calculation loader state
+        checkBtn.disabled = true;
+        checkBtn.innerHTML = '<i data-lucide="loader-2" class="h-4 w-4 animate-spin"></i> Analyzing...';
+        lucide.createIcons();
+        progressContainer.style.display = 'none';
+
+        try {
+            const response = await fetch('/calculate-ats', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 'resume': resumeText, 'jd': jdText })
+            });
+
+            if (!response.ok) throw new Error('Server request failed.');
+            const result = await response.json();
+
+            // Show result container
+            progressContainer.style.display = 'block';
+
+            // Trigger animation delay
+            setTimeout(() => {
+                progressBar.style.width = result.score + '%';
+                percentageText.innerText = result.score + '%';
+
+                // Style by score matching ranges using tailwind bg colors mapped dynamically
+                if (result.score >= 75) {
+                    progressBar.className = 'h-full rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)] transition-all duration-1000';
+                    percentageText.className = 'font-bold text-lg text-green-600';
+                    feedbackText.innerText = 'Excellent Match! Your resume details match target keywords exceptionally well. Ready for submission.';
+                } else if (result.score >= 45) {
+                    progressBar.className = 'h-full rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)] transition-all duration-1000';
+                    percentageText.className = 'font-bold text-lg text-amber-600';
+                    feedbackText.innerText = 'Moderate Match. Consider adding more exact phrases or technologies (e.g. skills listed in qualifications) to push matching above 75%.';
+                } else {
+                    progressBar.className = 'h-full rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)] transition-all duration-1000';
+                    percentageText.className = 'font-bold text-lg text-red-600';
+                    feedbackText.innerText = 'Low Match Rate. Review the job posting qualifications. Add specific programming languages, libraries, or methodologies requested to pass initial screening tests.';
+                }
+            }, 50);
+
+        } catch (error) {
+            console.error(error);
+            alert('An error occurred during calculations. Please try again.');
+        } finally {
+            checkBtn.disabled = false;
+            checkBtn.innerHTML = '<i data-lucide="bar-chart-2" class="h-4 w-4"></i> Run Match Score Analysis';
+            lucide.createIcons();
+        }
+    }
+
+    // Client Form Validation
+    function showClientFlash(message, category = 'danger') {
+        let container = document.getElementById('flash-messages-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'flash-messages-container';
+            container.className = 'flex flex-col gap-3 mb-6';
+            const formCard = document.querySelector('form').parentElement;
+            formCard.parentElement.insertBefore(container, formCard);
+        }
+
+        const alertDiv = document.createElement('div');
+        const bgClass = category === 'success' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700';
+        alertDiv.className = `flex items-center justify-between px-4 py-3 rounded-md text-sm border ${bgClass}`;
+        alertDiv.innerHTML = `
+            <span>${message}</span>
+            <button onclick="this.parentElement.remove();" class="opacity-70 hover:opacity-100">&times;</button>
+        `;
+        container.appendChild(alertDiv);
+        alertDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function validateResumeForm(event) {
+        const nameInput = document.querySelector('[name="name"]');
+        const emailInput = document.querySelector('[name="email"]');
+
+        let isValid = true;
+        let errors = [];
+
+        if (!nameInput || nameInput.value.trim().length < 2) {
+            errors.push('Full Name must be at least 2 characters long.');
+            isValid = false;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailInput || !emailRegex.test(emailInput.value.trim())) {
+            errors.push('Please enter a valid email address.');
+            isValid = false;
+        }
+
+        if (!isValid) {
+            event.preventDefault();
+            const existingFlashes = document.querySelectorAll('#flash-messages-container > div');
+            existingFlashes.forEach(f => f.remove());
+            errors.forEach(err => showClientFlash(err, 'danger'));
+            return false;
+        }
+        return true;
+    }
+  </script>
+</body>
+</html>

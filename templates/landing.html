@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resume Builder - Smarter Automation</title>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='saas_style.css') }}">
+  
+  <style>
+    /* Privy Glass Skin Theme */
+    #privy-dialog {
+        background: rgba(255, 255, 255, 0.85) !important;
+        backdrop-filter: blur(24px) !important;
+        -webkit-backdrop-filter: blur(24px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.6) !important;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
+        border-radius: 1.5rem !important; 
+    }
+  </style>
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Tailwind Config to map CSS variables -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            background: 'hsl(var(--background))',
+            foreground: 'hsl(var(--foreground))',
+            primary: {
+              DEFAULT: 'hsl(var(--primary))',
+              foreground: 'hsl(var(--primary-foreground))',
+            },
+            secondary: {
+              DEFAULT: 'hsl(var(--secondary))',
+              foreground: 'hsl(var(--secondary-foreground))',
+            },
+            muted: {
+              DEFAULT: 'hsl(var(--muted))',
+              foreground: 'hsl(var(--muted-foreground))',
+            },
+            accent: {
+              DEFAULT: 'hsl(var(--accent))',
+              foreground: 'hsl(var(--accent-foreground))',
+            },
+            border: 'hsl(var(--border))',
+            ring: 'hsl(var(--ring))',
+          },
+          borderRadius: {
+            lg: 'var(--radius)',
+            md: 'calc(var(--radius) - 2px)',
+            sm: 'calc(var(--radius) - 4px)',
+          },
+          fontFamily: {
+            display: ['var(--font-display)'],
+            body: ['var(--font-body)'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="h-screen flex flex-col bg-background overflow-hidden font-body text-foreground">
+
+  <!-- Background Video -->
+  <video 
+    class="absolute inset-0 w-full h-full object-cover z-0" 
+    src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260319_015952_e1deeb12-8fb7-4071-a42a-60779fc64ab6.mp4" 
+    autoplay loop muted playsinline>
+  </video>
+
+  <!-- Navbar -->
+  <nav class="relative z-10 flex items-center justify-between px-6 md:px-12 lg:px-20 py-5 w-full">
+    <div class="flex items-center gap-2">
+      <i data-lucide="sparkles" class="h-5 w-5 text-accent"></i>
+      <span class="text-xl font-semibold tracking-tight text-foreground">Resume Builder</span>
+    </div>
+    
+    <div class="ml-auto flex items-center gap-4">
+      {% if session.user %}
+        <div class="h-9 w-9 rounded-full bg-secondary flex items-center justify-center text-sm font-medium border border-border text-foreground">
+          {{ session.user.Username[0]|upper }}
+        </div>
+        <a href="{{ url_for('logout') }}" class="rounded-full px-5 py-2 text-sm font-medium border border-border text-foreground hover:bg-secondary transition-colors">
+          Log Out
+        </a>
+      {% else %}
+        <button id="login-btn" class="rounded-full px-5 py-2 text-sm font-medium bg-gray-900 text-white hover:bg-black transition-colors">
+          Sign In
+        </button>
+      {% endif %}
+    </div>
+  </nav>
+
+  <!-- Hero Content -->
+  <main class="relative z-10 flex flex-col items-center w-full pt-12 md:pt-20 px-4">
+    
+    <!-- Headline -->
+    <h1 class="animate-fade-up-16-1 text-center font-display text-5xl md:text-6xl lg:text-[5rem] leading-[0.95] tracking-tight text-foreground max-w-xl mx-auto">
+      The Future of <span class="italic text-accent">Smarter</span> Resume Building
+    </h1>
+    
+    <!-- Subheadline -->
+    <p class="animate-fade-up-16-2 mt-4 text-center text-base md:text-lg text-gray-800 max-w-[650px] leading-relaxed font-body mx-auto">
+      Automate your busywork with intelligent agents that learn, adapt, and execute—so your team can focus on what matters most.
+    </p>
+    
+    <!-- CTA Buttons -->
+    <div class="animate-fade-up-16-3 mt-8 flex items-center gap-3">
+      {% if session.user %}
+      <a href="{{ url_for('dashboard') }}" class="rounded-full px-6 py-3.5 text-sm font-medium bg-gray-900 text-white hover:bg-black transition-colors flex items-center gap-2">
+        Go to Dashboard
+        <i data-lucide="arrow-right" class="h-4 w-4"></i>
+      </a>
+      {% else %}
+      <button id="signup-btn" class="rounded-full px-6 py-3.5 text-sm font-medium bg-gray-900 text-white hover:bg-black transition-colors flex items-center gap-2">
+        Get Started
+        <i data-lucide="arrow-right" class="h-4 w-4"></i>
+      </button>
+      {% endif %}
+    </div>
+    
+    <!-- Dashboard Preview -->
+    <div class="animate-fade-up-30-5 mt-12 md:mt-16 w-full max-w-5xl mx-auto">
+      <div class="dashboard-preview-wrapper rounded-2xl overflow-hidden p-3 md:p-4">
+        
+        <!-- Inner Dashboard Window -->
+        <div class="bg-background rounded-xl overflow-hidden shadow-sm border border-border flex flex-col h-[450px] text-[11px] select-none pointer-events-none">
+          
+          <!-- Top bar -->
+          <div class="flex items-center justify-between border-b border-border px-4 py-3 bg-white">
+            <div class="flex items-center gap-3">
+              <div class="h-6 w-6 rounded bg-primary text-primary-foreground flex items-center justify-center font-bold">R</div>
+              <span class="font-semibold text-sm">Resume Builder</span>
+              <i data-lucide="chevron-down" class="h-3 w-3 text-muted-foreground"></i>
+            </div>
+            
+            <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-md border border-border bg-muted/50 w-64 text-muted-foreground">
+              <i data-lucide="search" class="h-3 w-3"></i>
+              <span>Search...</span>
+              <span class="ml-auto text-[10px] border border-border rounded px-1">⌘K</span>
+            </div>
+            
+            <div class="flex items-center gap-4">
+              <button class="bg-accent text-accent-foreground px-3 py-1.5 rounded font-medium flex items-center gap-1.5">
+                <i data-lucide="plus" class="h-3 w-3"></i> New Resume
+              </button>
+              <i data-lucide="bell" class="h-4 w-4 text-muted-foreground"></i>
+              <div class="h-6 w-6 rounded-full bg-secondary flex items-center justify-center text-xs font-medium border border-border">JS</div>
+            </div>
+          </div>
+          
+          <!-- Body Layout -->
+          <div class="flex flex-1 overflow-hidden">
+            
+            <!-- Sidebar -->
+            <div class="w-48 border-r border-border bg-white flex flex-col py-4 hidden md:flex">
+              <div class="px-3 mb-4 text-[10px] font-semibold text-muted-foreground tracking-wider">MENU</div>
+              <div class="flex flex-col gap-1 px-2">
+                <div class="flex items-center gap-2 px-2 py-1.5 bg-secondary text-foreground rounded-md font-medium">
+                  <i data-lucide="home" class="h-3.5 w-3.5"></i> Home
+                </div>
+                <div class="flex items-center justify-between px-2 py-1.5 text-muted-foreground rounded-md">
+                  <div class="flex items-center gap-2">
+                    <i data-lucide="file-text" class="h-3.5 w-3.5"></i> Resumes
+                  </div>
+                  <span class="bg-primary text-primary-foreground text-[9px] px-1.5 py-0.5 rounded-full">12</span>
+                </div>
+                <div class="flex items-center gap-2 px-2 py-1.5 text-muted-foreground rounded-md">
+                  <i data-lucide="clock" class="h-3.5 w-3.5"></i> History
+                </div>
+                <div class="flex items-center justify-between px-2 py-1.5 text-muted-foreground rounded-md">
+                  <div class="flex items-center gap-2">
+                    <i data-lucide="layout-template" class="h-3.5 w-3.5"></i> Templates
+                  </div>
+                  <i data-lucide="chevron-right" class="h-3 w-3"></i>
+                </div>
+              </div>
+              
+              <div class="px-3 mt-6 mb-2 text-[10px] font-semibold text-muted-foreground tracking-wider">TOOLS</div>
+              <div class="flex flex-col gap-1 px-2">
+                <div class="flex items-center gap-2 px-2 py-1.5 text-muted-foreground rounded-md">
+                  <i data-lucide="target" class="h-3.5 w-3.5"></i> ATS Checker
+                </div>
+                <div class="flex items-center gap-2 px-2 py-1.5 text-muted-foreground rounded-md">
+                  <i data-lucide="settings" class="h-3.5 w-3.5"></i> Settings
+                </div>
+              </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="flex-1 bg-secondary/30 p-6 overflow-hidden flex flex-col gap-6">
+              
+              <!-- Greeting & Actions -->
+              <div>
+                <h2 class="text-lg font-semibold text-foreground">Welcome, Jane</h2>
+                <div class="flex flex-wrap items-center gap-2 mt-3">
+                  <div class="bg-primary text-primary-foreground px-3 py-1.5 rounded-full flex items-center gap-1 cursor-pointer">
+                    <i data-lucide="wand-2" class="h-3 w-3"></i> Auto Generate
+                  </div>
+                  <div class="bg-white border border-border text-foreground px-3 py-1.5 rounded-full flex items-center gap-1">
+                    Upload PDF
+                  </div>
+                  <div class="bg-white border border-border text-foreground px-3 py-1.5 rounded-full flex items-center gap-1">
+                    Check Score
+                  </div>
+                  <div class="bg-white border border-border text-foreground px-3 py-1.5 rounded-full flex items-center gap-1">
+                    Cover Letter
+                  </div>
+                  <div class="text-muted-foreground ml-2 text-[10px] hover:text-foreground cursor-pointer transition-colors">
+                    + Customize
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Cards Row -->
+              <div class="flex gap-4">
+                
+                <!-- Stats Card -->
+                <div class="flex-1 bg-white border border-border rounded-xl p-4 flex flex-col">
+                  <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-1.5 text-foreground font-medium">
+                      Average ATS Score
+                      <i data-lucide="check-circle-2" class="h-3 w-3 text-green-500"></i>
+                    </div>
+                    <i data-lucide="more-horizontal" class="h-4 w-4 text-muted-foreground"></i>
+                  </div>
+                  <div class="text-3xl font-display text-foreground mb-1">
+                    84<span class="text-sm text-muted-foreground font-body">/100</span>
+                  </div>
+                  <div class="flex items-center gap-2 text-[10px] mb-4">
+                    <span class="text-muted-foreground">Last 30 Days</span>
+                    <span class="text-green-500 font-medium">+12 pts</span>
+                  </div>
+                  
+                  <!-- SVG Chart -->
+                  <div class="mt-auto h-20 w-full relative">
+                    <svg viewBox="0 0 100 30" preserveAspectRatio="none" class="w-full h-full">
+                      <defs>
+                        <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stop-color="hsl(var(--accent))" stop-opacity="0.2" />
+                          <stop offset="100%" stop-color="hsl(var(--accent))" stop-opacity="0" />
+                        </linearGradient>
+                      </defs>
+                      <path d="M0,30 L0,20 C10,20 15,10 25,12 C35,14 40,25 50,22 C60,19 65,5 75,8 C85,11 90,2 100,5 L100,30 Z" fill="url(#chartGradient)"></path>
+                      <path d="M0,20 C10,20 15,10 25,12 C35,14 40,25 50,22 C60,19 65,5 75,8 C85,11 90,2 100,5" fill="none" stroke="hsl(var(--accent))" stroke-width="1.5" vector-effect="non-scaling-stroke"></path>
+                    </svg>
+                  </div>
+                </div>
+                
+                <!-- List Card -->
+                <div class="flex-1 bg-white border border-border rounded-xl p-4 flex flex-col">
+                  <div class="flex items-center justify-between mb-4">
+                    <div class="text-foreground font-medium">Recent Templates</div>
+                    <div class="flex items-center gap-2">
+                      <i data-lucide="plus" class="h-3.5 w-3.5 text-muted-foreground"></i>
+                      <i data-lucide="more-vertical" class="h-3.5 w-3.5 text-muted-foreground"></i>
+                    </div>
+                  </div>
+                  <div class="flex flex-col gap-3">
+                    <div class="flex items-center justify-between">
+                      <span class="text-foreground">Software Engineer</span>
+                      <span class="text-muted-foreground">Used 12 times</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <span class="text-foreground">Product Manager</span>
+                      <span class="text-muted-foreground">Used 8 times</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <span class="text-foreground">UX Designer</span>
+                      <span class="text-muted-foreground">Used 3 times</span>
+                    </div>
+                  </div>
+                </div>
+                
+              </div>
+              
+              <!-- Table Section -->
+              <div class="bg-white border border-border rounded-xl p-4 flex-1">
+                <h3 class="text-foreground font-medium mb-4">Recent Generations</h3>
+                <div class="w-full text-left">
+                  <div class="grid grid-cols-4 pb-2 border-b border-border text-muted-foreground font-medium mb-2">
+                    <div>Date</div>
+                    <div>Resume Name</div>
+                    <div>Template</div>
+                    <div>Status</div>
+                  </div>
+                  <div class="flex flex-col gap-2">
+                    <div class="grid grid-cols-4 items-center">
+                      <div class="text-muted-foreground">Oct 24, 2026</div>
+                      <div class="text-foreground font-medium">resume_jane_swe.pdf</div>
+                      <div class="text-muted-foreground">Template 1</div>
+                      <div><span class="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-[9px] font-medium">Completed</span></div>
+                    </div>
+                    <div class="grid grid-cols-4 items-center">
+                      <div class="text-muted-foreground">Oct 22, 2026</div>
+                      <div class="text-foreground font-medium">resume_jane_pm.pdf</div>
+                      <div class="text-muted-foreground">Template 2</div>
+                      <div><span class="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-[9px] font-medium">Completed</span></div>
+                    </div>
+                    <div class="grid grid-cols-4 items-center">
+                      <div class="text-muted-foreground">Oct 20, 2026</div>
+                      <div class="text-foreground font-medium">google_ats_test.pdf</div>
+                      <div class="text-muted-foreground">Template 1</div>
+                      <div><span class="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full text-[9px] font-medium">Analyzing</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+            </div>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+    
+  </main>
+
+  <script>
+    lucide.createIcons();
+  </script>
+
+  <!-- Privy Setup for Landing Page -->
+  <script type="importmap">
+    {
+        "imports": {
+            "react": "https://esm.sh/react@18.2.0",
+            "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+            "@privy-io/react-auth": "https://esm.sh/@privy-io/react-auth@1.52.3?deps=react@18.2.0"
+        }
+    }
+  </script>
+  
+  <script type="module">
+    import React, { useEffect, useState } from 'react';
+    import { createRoot } from 'react-dom/client';
+    import { PrivyProvider, usePrivy } from '@privy-io/react-auth';
+
+    function AuthHandler() {
+        const { login, ready, authenticated, getAccessToken } = usePrivy();
+        const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+        useEffect(() => {
+            const loginBtn = document.getElementById('login-btn');
+            const signupBtn = document.getElementById('signup-btn');
+            
+            const handleAuthClick = (e) => {
+                e.preventDefault();
+                if (ready) login();
+            };
+
+            if (loginBtn) loginBtn.addEventListener('click', handleAuthClick);
+            if (signupBtn) signupBtn.addEventListener('click', handleAuthClick);
+
+            return () => {
+                if (loginBtn) loginBtn.removeEventListener('click', handleAuthClick);
+                if (signupBtn) signupBtn.removeEventListener('click', handleAuthClick);
+            };
+        }, [ready, login]);
+
+        useEffect(() => {
+            async function handleSuccess() {
+                if (ready && authenticated && !isLoggingIn) {
+                    setIsLoggingIn(true);
+                    try {
+                        const token = await getAccessToken();
+                        const response = await fetch('/privy_login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ access_token: token })
+                        });
+                        const result = await response.json();
+                        if (result.success) {
+                            window.location.href = '/dashboard';
+                        }
+                    } catch (error) {
+                        console.error(error);
+                        setIsLoggingIn(false);
+                    }
+                }
+            }
+            handleSuccess();
+        }, [ready, authenticated]);
+
+        return React.createElement('div', { style: { display: 'none' } });
+    }
+
+    function App() {
+        return React.createElement(
+            PrivyProvider,
+            {
+                appId: "{{ privy_app_id }}",
+                config: {
+                    loginMethods: ['email', 'google'],
+                    appearance: { 
+                        theme: 'light', 
+                        accentColor: '#10B981',
+                        logo: 'https://cdn.iconscout.com/icon/free/png-256/free-resume-1956282-1650445.png',
+                        showWalletLoginFirst: false 
+                    }
+                }
+            },
+            React.createElement(AuthHandler)
+        );
+    }
+
+    const reactMount = document.createElement('div');
+    reactMount.style.display = 'none';
+    document.body.appendChild(reactMount);
+    createRoot(reactMount).render(React.createElement(App));
+  </script>
+</body>
+</html>

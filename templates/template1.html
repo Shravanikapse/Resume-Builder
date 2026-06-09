@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ name }} - Resume</title>
+<style>
+  /* --- 0. ROOT FONT SIZE CONTROL --- */
+  html {
+    /* YAHAN SE AAP OVERALL FONT SIZE CONTROL KAR SAKTE HAIN.
+      Isko 14px, 13px, ya 15px karke dekhein, poora resume adjust ho jayega.
+    */
+    font-size: 19px; 
+  }
+
+  /* --- 1. PROFESSIONAL FONTS & COLORS (AGGRESSIVE SPACING) --- */
+  body { 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+      margin: 0; 
+      padding: 0; 
+      background: #f8f9fa; 
+      color: #333333; 
+      /* UPDATED: Tighter line height */
+      line-height: 1.4; 
+  }
+  .container { 
+      max-width: 900px; 
+      margin: 0 auto; 
+      background: #fff; 
+      /* UPDATED: Reduced padding */
+      padding: 0px 20px 10px 20px; 
+      line-height: 1.4; /* Was 1.5 */
+  }
+
+  /* --- 2. HEADER STYLING (AGGRESSIVE SPACING) --- */
+  header { 
+      text-align: center; 
+      /* UPDATED: Reduced spacing */
+      margin-top: 1px;
+     
+      /* UPDATED: Reduced spacing */
+      padding-bottom: 12px; 
+      margin-bottom: 15px; 
+  }
+  
+  /* Name (H1) Styling */
+  h1 { 
+      margin: 0; 
+      /* UPDATED: Slightly smaller */
+      font-size: 32px; 
+      font-weight: 600; 
+      color: #003366; 
+  }
+  
+  /* Contact Info (P) Styling */
+  header p { 
+      /* UPDATED: Reduced spacing */
+      margin: 5px 0 0 0; 
+      color: #333; 
+      font-size: 17px;
+  }
+  
+  a {
+      color: #003366; 
+      text-decoration: none;
+  }
+  a:hover {
+      text-decoration: underline;
+  }
+
+  /* --- 3. SECTION HEADING (H2) STYLING (AGGRESSIVE SPACING) --- */
+  h2 { 
+      /* UPDATED: Reduced spacing */
+      margin-top: 10px; 
+      margin-bottom: 4px; /* Added */
+      color: #003366; 
+      /* UPDATED: Slightly smaller */
+      font-size: 16px; 
+      border-bottom: 2px solid #f0f0f0; 
+      padding-bottom: 4px; 
+      text-transform: uppercase; 
+      letter-spacing: 1px; 
+  }
+  
+  ul { 
+      padding-left: 20px; 
+      /* UPDATED: Reduced spacing */
+      margin-top: 3px;
+  }
+  li { 
+      /* UPDATED: Reduced spacing */
+      margin-bottom: 3px; 
+  }
+  p {
+      /* UPDATED: Reduced spacing */
+      margin-top: 3px;
+      margin-bottom: 3px; /* Added */
+  }
+  
+  /* Education/Experience items ke liye helper styles */
+  .item {
+      width: 100%;
+      overflow: hidden; 
+      /* UPDATED: Reduced spacing */
+      margin-bottom: 3px;
+  }
+  .item-title {
+      float: left;
+      font-weight: bold;
+      margin-left: 15px; /* Reduced */
+  }
+  .item-details {
+      font-weight: normal;
+      color: #333;
+      text-align: justify; 
+      margin-left: 15px; /* Reduced */
+  }
+  .item-year {
+      float: right;
+      font-weight: bold;
+      color: #555;
+  }
+  
+  .skills-list {
+      margin-left: 15px; /* Reduced */
+      /* UPDATED: Tighter line height */
+      line-height: 1.8; 
+  }
+  
+  .summary-text {
+      margin-left: 15px; /* Reduced */
+  }
+
+</style>
+</head>
+<body>
+<div class="container">
+  
+  <header>
+    <h1>{{ name }}</h1>
+    
+    {% set linkedin_url = linkedin %}
+    {% if not linkedin.startswith("http") %}
+      {% set linkedin_url = "https://" + linkedin %}
+    {% endif %}
+
+    <p>
+      {{ contact }} | 
+      <a href="mailto:{{ email }}">{{ email }}</a> | 
+      <a href="{{ linkedin_url }}" target="_blank">
+          {{ linkedin_url | replace("https://", "") | replace("http://", "") }}
+      </a> | 
+      {{ location }}
+    </p>
+  </header>
+
+
+  <section>
+    <h2>Summary</h2>
+    <p class="summary-text">{{ summary }}</p>
+  </section>
+
+  <section>
+    <h2>Education</h2>
+    {% for edu in education %}
+      <div class="item">
+        <span class="item-title">
+          {{ edu.degree }}
+          <br>
+          <span class="item-details">
+            {{ edu.description }}
+          </span>
+        </span>
+        <span class="item-year">
+          {{ edu.year }}
+        </span>
+      </div>
+    {% endfor %}
+  </section>
+
+  <section>
+    <h2>Projects</h2>
+      {% for project in projects %}
+       <ul style="margin-left: 0px;"> <!-- Reduced margin -->
+          <strong>{{ project.title }}</strong>
+          <br>
+          <span style="color: #323232; margin-left: 0px;">
+          {{ project.description }}
+          </span>
+        </ul>
+      {% endfor %}
+  </section>
+
+<section>
+  <h2>Experience</h2>
+  {% for exp in experience %}
+  <div class="item">
+    <!-- Title and Year on same line -->
+    <div class="item-header">
+      <span class="item-title">{{ exp.title }}</span>
+      <span class="item-year">{{ exp.year }}</span>
+    </div>
+    <br>
+    <!-- Description on next line -->
+    <p class="item-details">{{ exp.description }}</p>
+  </div>
+  {% endfor %}
+</section>
+  
+
+  <section>
+    <h2>Skills</h2>
+    <p class="skills-list">
+      {% for skill in skills %}
+        <strong>{{ skill }}</strong>{% if not loop.last %} &nbsp;&bull;&nbsp; {% endif %}
+      {% endfor %}
+    </p>
+  </section>
+
+  <section>
+    <h2>Achievements</h2>
+    <ul style="margin-left: 15px;"> <!-- Reduced margin -->
+      {% for achievement in achievements %}
+      <li>{{ achievement }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section>
+    <h2>Certifications</h2>
+    <ul style="margin-left: 15px;"> <!-- Reduced margin -->
+      {% for certifications in certifications %}
+      <li>Certified in <strong>{{ certifications.title }}</strong> - {{ certifications.description }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+</div>
+</body>
+</html>
+

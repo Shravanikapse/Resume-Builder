@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Resume Builder</title>
+  
+  <link rel="stylesheet" href="{{ url_for('static', filename='saas_style.css') }}">
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            background: 'hsl(var(--background))',
+            foreground: 'hsl(var(--foreground))',
+            primary: {
+              DEFAULT: 'hsl(var(--primary))',
+              foreground: 'hsl(var(--primary-foreground))',
+            },
+            secondary: {
+              DEFAULT: 'hsl(var(--secondary))',
+              foreground: 'hsl(var(--secondary-foreground))',
+            },
+            muted: {
+              DEFAULT: 'hsl(var(--muted))',
+              foreground: 'hsl(var(--muted-foreground))',
+            },
+            accent: {
+              DEFAULT: 'hsl(var(--accent))',
+              foreground: 'hsl(var(--accent-foreground))',
+            },
+            border: 'hsl(var(--border))',
+            ring: 'hsl(var(--ring))',
+          },
+          borderRadius: {
+            lg: 'var(--radius)',
+            md: 'calc(var(--radius) - 2px)',
+            sm: 'calc(var(--radius) - 4px)',
+          },
+          fontFamily: {
+            display: ['var(--font-display)'],
+            body: ['var(--font-body)'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="h-screen flex flex-col bg-background overflow-hidden font-body text-foreground">
+
+  <!-- Top bar -->
+  <div class="flex items-center justify-between border-b border-border px-6 py-3 bg-white z-10 shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="h-8 w-8 rounded bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg">R</div>
+      <span class="font-semibold text-lg tracking-tight">Resume Builder</span>
+      <i data-lucide="chevron-down" class="h-4 w-4 text-muted-foreground ml-1"></i>
+    </div>
+    
+    <div class="hidden md:flex items-center gap-2 px-4 py-2 rounded-md border border-border bg-muted/50 w-80 text-muted-foreground text-sm">
+      <i data-lucide="search" class="h-4 w-4"></i>
+      <span>Search resumes, templates...</span>
+      <span class="ml-auto text-xs border border-border rounded px-1.5 py-0.5">⌘K</span>
+    </div>
+    
+    <div class="flex items-center gap-5">
+      <a href="{{ url_for('form') }}" class="bg-accent text-accent-foreground px-4 py-2 rounded-md font-medium flex items-center gap-2 text-sm hover:bg-accent/90 transition-colors">
+        <i data-lucide="plus" class="h-4 w-4"></i> New Resume
+      </a>
+      <i data-lucide="bell" class="h-5 w-5 text-muted-foreground cursor-pointer hover:text-foreground transition-colors"></i>
+      <div class="h-8 w-8 rounded-full bg-secondary flex items-center justify-center text-sm font-medium border border-border relative group cursor-pointer">
+        {{ session.user.Username[0]|upper }}
+        <!-- Dropdown Menu -->
+        <div class="absolute right-0 top-full mt-2 w-48 bg-white border border-border rounded-md shadow-lg hidden group-hover:block z-50">
+          <div class="px-4 py-2 text-xs text-muted-foreground border-b border-border">{{ session.user.Role|capitalize }}</div>
+          <a href="{{ url_for('logout') }}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">Log Out</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Body Layout -->
+  <div class="flex flex-1 overflow-hidden">
+    
+    <!-- Sidebar -->
+    <div class="w-56 border-r border-border bg-white flex flex-col py-6 shrink-0 hidden lg:flex">
+      <div class="px-5 mb-4 text-xs font-semibold text-muted-foreground tracking-wider">MENU</div>
+      <div class="flex flex-col gap-1 px-3">
+        <a href="{{ url_for('dashboard') }}" class="flex items-center gap-3 px-3 py-2 bg-secondary text-foreground rounded-md font-medium text-sm transition-colors">
+          <i data-lucide="home" class="h-4 w-4"></i> Home
+        </a>
+        <a href="{{ url_for('history') }}" class="flex items-center gap-3 px-3 py-2 text-muted-foreground hover:bg-secondary hover:text-foreground rounded-md text-sm transition-colors">
+          <i data-lucide="file-text" class="h-4 w-4"></i> My Resumes
+        </a>
+        <a href="{{ url_for('history') }}" class="flex items-center gap-3 px-3 py-2 text-muted-foreground hover:bg-secondary hover:text-foreground rounded-md text-sm transition-colors">
+          <i data-lucide="clock" class="h-4 w-4"></i> History
+        </a>
+      </div>
+      
+      <div class="px-5 mt-8 mb-4 text-xs font-semibold text-muted-foreground tracking-wider">TOOLS</div>
+      <div class="flex flex-col gap-1 px-3">
+        <div class="flex items-center justify-between px-3 py-2 text-muted-foreground hover:bg-secondary hover:text-foreground rounded-md text-sm cursor-pointer transition-colors">
+          <div class="flex items-center gap-3">
+            <i data-lucide="layout-template" class="h-4 w-4"></i> Templates
+          </div>
+          <i data-lucide="chevron-right" class="h-4 w-4"></i>
+        </div>
+        <div class="flex items-center gap-3 px-3 py-2 text-muted-foreground hover:bg-secondary hover:text-foreground rounded-md text-sm cursor-pointer transition-colors">
+          <i data-lucide="target" class="h-4 w-4"></i> ATS Checker
+        </div>
+      </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="flex-1 bg-secondary/30 p-6 md:p-10 overflow-y-auto">
+      <div class="max-w-6xl mx-auto flex flex-col gap-8">
+        
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flex flex-col gap-3">
+            {% for category, message in messages %}
+            <div class="flex items-center justify-between px-4 py-3 rounded-md text-sm border {% if category == 'success' %}bg-green-50 border-green-200 text-green-700{% else %}bg-red-50 border-red-200 text-red-700{% endif %}">
+                <span>{{ message }}</span>
+                <button onclick="this.parentElement.remove();" class="opacity-70 hover:opacity-100">&times;</button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+        
+        <!-- Greeting & Actions -->
+        <div>
+          <h2 class="text-3xl font-display text-foreground tracking-tight">Welcome, {{ session.user.Username|capitalize }}</h2>
+          <p class="text-muted-foreground mt-1 text-sm">
+            {% if session.user.Role == 'admin' %}
+              Admin Console - Manage student forms and generate bulk resumes.
+            {% else %}
+              Build, optimize, and export your professional resume.
+            {% endif %}
+          </p>
+          
+          <div class="flex flex-wrap items-center gap-3 mt-5">
+            <a href="{{ url_for('form') }}" class="bg-primary text-primary-foreground px-4 py-2 rounded-full flex items-center gap-2 cursor-pointer text-sm font-medium hover:bg-primary/90 transition-colors shadow-sm">
+              <i data-lucide="wand-2" class="h-4 w-4"></i> Create Resume
+            </a>
+            <a href="{{ url_for('history') }}" class="bg-white border border-border text-foreground px-4 py-2 rounded-full flex items-center gap-2 cursor-pointer text-sm font-medium hover:bg-secondary transition-colors shadow-sm">
+              <i data-lucide="clock" class="h-4 w-4 text-muted-foreground"></i> View History
+            </a>
+            {% if session.user.Role == 'student' and google_form_link %}
+            <a href="{{ google_form_link }}" target="_blank" class="bg-white border border-border text-foreground px-4 py-2 rounded-full flex items-center gap-2 cursor-pointer text-sm font-medium hover:bg-secondary transition-colors shadow-sm">
+              <i data-lucide="external-link" class="h-4 w-4 text-muted-foreground"></i> Submit Details Form
+            </a>
+            {% endif %}
+          </div>
+        </div>
+        
+        <!-- ======================= -->
+        <!-- ADMIN DASHBOARD SECTION -->
+        <!-- ======================= -->
+        {% if session.user.Role == 'admin' %}
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          <!-- Bulk Generation Card -->
+          <div class="bg-white border border-border rounded-xl p-6 flex flex-col shadow-sm relative overflow-hidden group">
+            <div class="absolute top-0 left-0 w-full h-1 bg-accent"></div>
+            <div class="flex items-center gap-3 mb-4">
+              <div class="h-10 w-10 rounded-md bg-accent/10 flex items-center justify-center text-accent">
+                <i data-lucide="file-spreadsheet" class="h-5 w-5"></i>
+              </div>
+              <h3 class="text-xl font-semibold text-foreground tracking-tight">Bulk Generation</h3>
+            </div>
+            <p class="text-muted-foreground text-sm mb-6 flex-1">
+              Paste a Google Sheet export link containing gathered student responses to batch render resume print files.
+            </p>
+            
+            <form action="{{ url_for('generate') }}" method="POST" class="flex flex-col gap-4">
+                <input type="text" name="sheet_link" placeholder="Paste Google Sheet Link..." required 
+                       class="w-full px-4 py-2.5 bg-secondary border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all">
+                
+                <select name="template_choice" class="w-full px-4 py-2.5 bg-secondary border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all">
+                    <option value="template1.html">Template 1 (Classic Print)</option>
+                    <option value="template2.html">Template 2 (Modern Side-Column)</option>
+                </select>
+                
+                <button type="submit" class="w-full bg-accent text-accent-foreground font-medium py-2.5 rounded-md text-sm hover:bg-accent/90 transition-colors shadow-sm flex items-center justify-center gap-2">
+                  <i data-lucide="download" class="h-4 w-4"></i> Generate Resumes (.zip)
+                </button>
+            </form>
+          </div>
+          
+          <!-- Google Form Config Card -->
+          <div class="bg-white border border-border rounded-xl p-6 flex flex-col shadow-sm relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-green-500"></div>
+            <div class="flex items-center gap-3 mb-4">
+              <div class="h-10 w-10 rounded-md bg-green-500/10 flex items-center justify-center text-green-600">
+                <i data-lucide="link" class="h-5 w-5"></i>
+              </div>
+              <h3 class="text-xl font-semibold text-foreground tracking-tight">Google Form Link</h3>
+            </div>
+            <p class="text-muted-foreground text-sm mb-6">
+              Provide students a Google Form URL where they submit data. Saves directly to students' dashboard views.
+            </p>
+            
+            {% if google_form_link %}
+            <div class="flex flex-col items-center justify-center p-6 bg-secondary/50 rounded-lg border border-border mb-4">
+                <img class="w-40 h-40 bg-white p-2 rounded-md shadow-sm mb-4" 
+                     src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={{ google_form_link | urlencode }}" 
+                     alt="QR Code" />
+                <p class="text-sm font-medium text-foreground">Autogenerated QR</p>
+                <p class="text-xs text-muted-foreground text-center mt-1">Students can scan this to open the form.</p>
+            </div>
+            
+            <button onclick="copyFormLink('{{ google_form_link }}')" class="w-full bg-white border border-border text-foreground font-medium py-2.5 rounded-md text-sm hover:bg-secondary transition-colors shadow-sm flex items-center justify-center gap-2">
+              <i data-lucide="copy" class="h-4 w-4 text-muted-foreground"></i> Copy Shareable Link
+            </button>
+            {% else %}
+            <div class="flex items-center justify-center flex-1 bg-secondary border border-border border-dashed rounded-lg">
+                <p class="text-sm text-muted-foreground">No Google Form link configured.</p>
+            </div>
+            {% endif %}
+          </div>
+          
+        </div>
+
+        <!-- ========================= -->
+        <!-- STUDENT DASHBOARD SECTION -->
+        <!-- ========================= -->
+        {% else %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          
+          <!-- Stats Card -->
+          <div class="bg-white border border-border rounded-xl p-5 flex flex-col shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-2 text-foreground font-medium text-sm">
+                Total Resumes Generated
+                <i data-lucide="check-circle-2" class="h-4 w-4 text-green-500"></i>
+              </div>
+              <i data-lucide="more-horizontal" class="h-4 w-4 text-muted-foreground"></i>
+            </div>
+            <div class="text-4xl font-display text-foreground mb-1 tracking-tight">
+              {{ total_resumes }}
+            </div>
+            <div class="flex items-center gap-2 text-xs mb-6">
+              <span class="text-muted-foreground">Across all time</span>
+              <span class="text-green-500 font-medium bg-green-50 px-1.5 py-0.5 rounded">Active</span>
+            </div>
+            
+            <!-- SVG Chart (Decorative) -->
+            <div class="mt-auto h-24 w-full relative -mx-2">
+              <svg viewBox="0 0 100 30" preserveAspectRatio="none" class="w-full h-full">
+                <defs>
+                  <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="hsl(var(--accent))" stop-opacity="0.2" />
+                    <stop offset="100%" stop-color="hsl(var(--accent))" stop-opacity="0" />
+                  </linearGradient>
+                </defs>
+                <path d="M0,30 L0,20 C10,20 15,10 25,12 C35,14 40,25 50,22 C60,19 65,5 75,8 C85,11 90,2 100,5 L100,30 Z" fill="url(#chartGradient)"></path>
+                <path d="M0,20 C10,20 15,10 25,12 C35,14 40,25 50,22 C60,19 65,5 75,8 C85,11 90,2 100,5" fill="none" stroke="hsl(var(--accent))" stroke-width="1.5" vector-effect="non-scaling-stroke"></path>
+              </svg>
+            </div>
+          </div>
+          
+          <!-- How It Works Section inside grid -->
+          <div class="lg:col-span-2 bg-white border border-border rounded-xl p-6 shadow-sm flex flex-col">
+            <h3 class="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
+              <i data-lucide="info" class="h-5 w-5 text-accent"></i> How It Works
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1">
+              <div class="flex flex-col gap-2">
+                <div class="w-8 h-8 rounded-full bg-accent/10 text-accent font-bold flex items-center justify-center mb-2">1</div>
+                <h4 class="font-medium text-foreground">Enter Details</h4>
+                <p class="text-sm text-muted-foreground leading-relaxed">Input your personal summary, educational qualifications, projects list, experience, and custom skills.</p>
+              </div>
+              <div class="flex flex-col gap-2">
+                <div class="w-8 h-8 rounded-full bg-accent/10 text-accent font-bold flex items-center justify-center mb-2">2</div>
+                <h4 class="font-medium text-foreground">Match Keywords</h4>
+                <p class="text-sm text-muted-foreground leading-relaxed">Use the built-in ATS Scoring tool, paste the targeting job description, and check your suitability score instantly.</p>
+              </div>
+              <div class="flex flex-col gap-2">
+                <div class="w-8 h-8 rounded-full bg-accent/10 text-accent font-bold flex items-center justify-center mb-2">3</div>
+                <h4 class="font-medium text-foreground">Compile & Export</h4>
+                <p class="text-sm text-muted-foreground leading-relaxed">Select an elegant structure template and download the final compiled PDF ready for application delivery.</p>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+
+        <!-- Table Section for Recent Generations -->
+        <div class="bg-white border border-border rounded-xl p-6 shadow-sm mt-6">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-semibold text-foreground flex items-center gap-2">
+              <i data-lucide="clock" class="h-5 w-5 text-accent"></i> Recent Generations
+            </h3>
+            <a href="{{ url_for('history') }}" class="text-sm font-medium text-accent hover:underline">View All</a>
+          </div>
+          
+          <div class="w-full text-left overflow-x-auto">
+            {% if recent_history %}
+            <table class="w-full text-sm whitespace-nowrap">
+              <thead class="bg-secondary/50 text-muted-foreground text-xs uppercase font-medium tracking-wider">
+                <tr>
+                  <th class="px-4 py-3 border-b border-border font-medium text-left">Date</th>
+                  <th class="px-4 py-3 border-b border-border font-medium text-left">Resume Name</th>
+                  <th class="px-4 py-3 border-b border-border font-medium text-left">Template</th>
+                  <th class="px-4 py-3 border-b border-border font-medium text-left">Status</th>
+                  <th class="px-4 py-3 border-b border-border font-medium text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-border text-foreground">
+                {% for item in recent_history %}
+                <tr class="hover:bg-secondary/30 transition-colors">
+                  <td class="px-4 py-3 text-muted-foreground">{{ item.date }}</td>
+                  <td class="px-4 py-3 font-medium">{{ item.name }}</td>
+                  <td class="px-4 py-3 text-muted-foreground">
+                    {% if item.template == 'template1.html' %} Classic Print {% else %} Modern Side-Column {% endif %}
+                  </td>
+                  <td class="px-4 py-3">
+                    <span class="bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-[10px] font-medium">Completed</span>
+                  </td>
+                  <td class="px-4 py-3 text-right">
+                    <a href="{{ url_for('view_resume', history_id=item.id) }}" class="inline-flex items-center gap-1 text-accent hover:underline font-medium text-xs">
+                      <i data-lucide="download" class="h-3 w-3"></i> Download
+                    </a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {% else %}
+            <div class="flex flex-col items-center justify-center py-8 text-center bg-secondary/30 rounded-lg border border-border border-dashed">
+              <i data-lucide="file-plus" class="h-8 w-8 text-muted-foreground mb-3"></i>
+              <p class="text-sm text-muted-foreground">No recent resumes found.</p>
+              <a href="{{ url_for('form') }}" class="mt-3 text-sm font-medium text-accent hover:underline">Create your first resume</a>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        {% endif %}
+        
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+    
+    function copyFormLink(link) {
+        if (link) {
+            navigator.clipboard.writeText(link).then(() => {
+                alert("Link copied to clipboard!");
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+        }
+    }
+  </script>
+</body>
+</html>

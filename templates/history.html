@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generation History - Resume Builder</title>
+  
+  <link rel="stylesheet" href="{{ url_for('static', filename='saas_style.css') }}">
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            background: 'hsl(var(--background))',
+            foreground: 'hsl(var(--foreground))',
+            primary: {
+              DEFAULT: 'hsl(var(--primary))',
+              foreground: 'hsl(var(--primary-foreground))',
+            },
+            secondary: {
+              DEFAULT: 'hsl(var(--secondary))',
+              foreground: 'hsl(var(--secondary-foreground))',
+            },
+            muted: {
+              DEFAULT: 'hsl(var(--muted))',
+              foreground: 'hsl(var(--muted-foreground))',
+            },
+            accent: {
+              DEFAULT: 'hsl(var(--accent))',
+              foreground: 'hsl(var(--accent-foreground))',
+            },
+            border: 'hsl(var(--border))',
+            ring: 'hsl(var(--ring))',
+          },
+          borderRadius: {
+            lg: 'var(--radius)',
+            md: 'calc(var(--radius) - 2px)',
+            sm: 'calc(var(--radius) - 4px)',
+          },
+          fontFamily: {
+            display: ['var(--font-display)'],
+            body: ['var(--font-body)'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="h-screen flex flex-col bg-background overflow-hidden font-body text-foreground">
+
+  <!-- Top bar -->
+  <div class="flex items-center justify-between border-b border-border px-6 py-3 bg-white z-10 shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="h-8 w-8 rounded bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg">R</div>
+      <span class="font-semibold text-lg tracking-tight">Resume Builder</span>
+      <i data-lucide="chevron-down" class="h-4 w-4 text-muted-foreground ml-1"></i>
+    </div>
+    
+    <div class="hidden md:flex items-center gap-2 px-4 py-2 rounded-md border border-border bg-muted/50 w-80 text-muted-foreground text-sm">
+      <i data-lucide="search" class="h-4 w-4"></i>
+      <span>Search resumes, templates...</span>
+      <span class="ml-auto text-xs border border-border rounded px-1.5 py-0.5">⌘K</span>
+    </div>
+    
+    <div class="flex items-center gap-5">
+      <a href="{{ url_for('form') }}" class="bg-accent text-accent-foreground px-4 py-2 rounded-md font-medium flex items-center gap-2 text-sm hover:bg-accent/90 transition-colors">
+        <i data-lucide="plus" class="h-4 w-4"></i> New Resume
+      </a>
+      <i data-lucide="bell" class="h-5 w-5 text-muted-foreground cursor-pointer hover:text-foreground transition-colors"></i>
+      <div class="h-8 w-8 rounded-full bg-secondary flex items-center justify-center text-sm font-medium border border-border relative group cursor-pointer">
+        {{ session.user.Username[0]|upper if session.user else 'U' }}
+        <!-- Dropdown Menu -->
+        <div class="absolute right-0 top-full mt-2 w-48 bg-white border border-border rounded-md shadow-lg hidden group-hover:block z-50">
+          <div class="px-4 py-2 text-xs text-muted-foreground border-b border-border">{{ session.user.Role|capitalize if session.user else 'User' }}</div>
+          <a href="{{ url_for('logout') }}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">Log Out</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Body Layout -->
+  <div class="flex flex-1 overflow-hidden">
+    
+    <!-- Sidebar -->
+    <div class="w-56 border-r border-border bg-white flex flex-col py-6 shrink-0 hidden lg:flex">
+      <div class="px-5 mb-4 text-xs font-semibold text-muted-foreground tracking-wider">MENU</div>
+      <div class="flex flex-col gap-1 px-3">
+        <a href="{{ url_for('dashboard') }}" class="flex items-center gap-3 px-3 py-2 text-muted-foreground hover:bg-secondary hover:text-foreground rounded-md text-sm transition-colors">
+          <i data-lucide="home" class="h-4 w-4"></i> Home
+        </a>
+        <a href="{{ url_for('history') }}" class="flex items-center gap-3 px-3 py-2 text-muted-foreground hover:bg-secondary hover:text-foreground rounded-md text-sm transition-colors">
+          <i data-lucide="file-text" class="h-4 w-4"></i> My Resumes
+        </a>
+        <a href="{{ url_for('history') }}" class="flex items-center gap-3 px-3 py-2 bg-secondary text-foreground rounded-md font-medium text-sm transition-colors">
+          <i data-lucide="clock" class="h-4 w-4"></i> History
+        </a>
+      </div>
+      
+      <div class="px-5 mt-8 mb-4 text-xs font-semibold text-muted-foreground tracking-wider">TOOLS</div>
+      <div class="flex flex-col gap-1 px-3">
+        <div class="flex items-center justify-between px-3 py-2 text-muted-foreground hover:bg-secondary hover:text-foreground rounded-md text-sm cursor-pointer transition-colors">
+          <div class="flex items-center gap-3">
+            <i data-lucide="layout-template" class="h-4 w-4"></i> Templates
+          </div>
+          <i data-lucide="chevron-right" class="h-4 w-4"></i>
+        </div>
+        <div class="flex items-center gap-3 px-3 py-2 text-muted-foreground hover:bg-secondary hover:text-foreground rounded-md text-sm cursor-pointer transition-colors">
+          <i data-lucide="target" class="h-4 w-4"></i> ATS Checker
+        </div>
+      </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="flex-1 bg-secondary/30 p-6 md:p-10 overflow-y-auto">
+      <div class="max-w-5xl mx-auto flex flex-col gap-8">
+        
+        <div>
+          <h2 class="text-3xl font-display text-foreground tracking-tight flex items-center gap-3">
+            <i data-lucide="history" class="h-7 w-7 text-accent"></i>
+            Generation History
+          </h2>
+          <p class="text-muted-foreground mt-1 text-sm">
+            View previously compiled resume formats and retrieve downloads.
+          </p>
+        </div>
+        
+        <div class="bg-white border border-border rounded-xl shadow-sm overflow-hidden flex flex-col">
+          
+          {% if session.user.Role == 'admin' %}
+            <!-- ADMIN LOG LIST VIEW -->
+            {% if all_history %}
+            <div class="overflow-x-auto w-full">
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                    <thead class="bg-secondary/50 text-muted-foreground text-xs uppercase font-medium tracking-wider">
+                        <tr>
+                            <th class="px-6 py-4 border-b border-border">User</th>
+                            <th class="px-6 py-4 border-b border-border">Resume Name</th>
+                            <th class="px-6 py-4 border-b border-border">Date Generated</th>
+                            <th class="px-6 py-4 border-b border-border text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-border text-foreground">
+                        {% for item in all_history %}
+                        <tr class="hover:bg-secondary/30 transition-colors">
+                            <td class="px-6 py-4">
+                                <span class="bg-primary/10 text-primary font-medium px-2.5 py-1 rounded-full text-xs">
+                                    {{ item.user.Username|capitalize if item.user else 'N/A' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 font-medium">{{ item.name }}</td>
+                            <td class="px-6 py-4 text-muted-foreground">{{ item.date }}</td>
+                            <td class="px-6 py-4 text-right">
+                                <a href="{{ url_for('view_resume', history_id=item.id) }}" class="inline-flex items-center gap-1.5 bg-accent/10 text-accent hover:bg-accent/20 px-3 py-1.5 rounded-md text-sm font-medium transition-colors">
+                                    <i data-lucide="download" class="h-4 w-4"></i> Download
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="flex flex-col items-center justify-center py-20 px-4 text-center">
+                <div class="h-16 w-16 bg-secondary rounded-full flex items-center justify-center text-muted-foreground mb-4">
+                    <i data-lucide="file-x" class="h-8 w-8"></i>
+                </div>
+                <h3 class="text-lg font-medium text-foreground">No Resumes Found</h3>
+                <p class="text-sm text-muted-foreground max-w-sm mt-1">No resumes have been generated on the platform yet.</p>
+            </div>
+            {% endif %}
+
+          {% else %}
+            <!-- STUDENT LOG LIST VIEW -->
+            {% if history %}
+            <div class="overflow-x-auto w-full">
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                    <thead class="bg-secondary/50 text-muted-foreground text-xs uppercase font-medium tracking-wider">
+                        <tr>
+                            <th class="px-6 py-4 border-b border-border">Resume Name</th>
+                            <th class="px-6 py-4 border-b border-border">Date Generated</th>
+                            <th class="px-6 py-4 border-b border-border text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-border text-foreground">
+                        {% for item in history %}
+                        <tr class="hover:bg-secondary/30 transition-colors">
+                            <td class="px-6 py-4 font-medium flex items-center gap-3">
+                                <i data-lucide="file-text" class="h-4 w-4 text-muted-foreground"></i>
+                                {{ item.name }}
+                            </td>
+                            <td class="px-6 py-4 text-muted-foreground">{{ item.date }}</td>
+                            <td class="px-6 py-4 text-right">
+                                <a href="{{ url_for('view_resume', history_id=item.id) }}" class="inline-flex items-center gap-1.5 bg-accent/10 text-accent hover:bg-accent/20 px-3 py-1.5 rounded-md text-sm font-medium transition-colors">
+                                    <i data-lucide="download" class="h-4 w-4"></i> Download
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="flex flex-col items-center justify-center py-20 px-4 text-center">
+                <div class="h-16 w-16 bg-secondary rounded-full flex items-center justify-center text-muted-foreground mb-4">
+                    <i data-lucide="file-plus" class="h-8 w-8"></i>
+                </div>
+                <h3 class="text-lg font-medium text-foreground">No Resumes Yet</h3>
+                <p class="text-sm text-muted-foreground max-w-sm mt-1">You have not generated any resumes yet. Start creating!</p>
+                <a href="{{ url_for('form') }}" class="mt-6 bg-primary text-primary-foreground px-5 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors">
+                    Create Resume Now
+                </a>
+            </div>
+            {% endif %}
+          {% endif %}
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>
