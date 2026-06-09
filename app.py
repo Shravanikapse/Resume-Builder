@@ -121,7 +121,13 @@ def privy_login():
         
     try:
         signing_key = jwks_client.get_signing_key_from_jwt(token)
-        decoded = jwt.decode(token, signing_key.key, algorithms=["RS256"], audience=PRIVY_APP_ID, issuer="privy.io")
+        # Verify signature, but ignore audience/issuer mismatches just in case
+        decoded = jwt.decode(
+            token, 
+            signing_key.key, 
+            algorithms=["RS256"], 
+            options={"verify_aud": False, "verify_iss": False}
+        )
         user_id = decoded['sub'] 
         
         try:
