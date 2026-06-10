@@ -73,6 +73,12 @@ def init_db():
                   template_choice VARCHAR(255) NOT NULL,
                   FOREIGN KEY (user_id) REFERENCES users (id))''')
 
+    c.execute('''CREATE TABLE IF NOT EXISTS login_history
+                 (id INT AUTO_INCREMENT PRIMARY KEY,
+                  user_id INT NOT NULL,
+                  login_time VARCHAR(255) NOT NULL,
+                  FOREIGN KEY (user_id) REFERENCES users (id))''')
+
     # Check for admin
     c.execute("SELECT * FROM users WHERE username='admin'")
     if c.fetchone() is None:
@@ -153,6 +159,10 @@ def privy_login():
                 conn.commit()
                 user['role'] = 'admin'
                 
+            # Log the login
+            c.execute("INSERT INTO login_history (user_id, login_time) VALUES (%s, %s)", (user['id'], str(datetime.now())))
+            conn.commit()
+                
             c.close()
             conn.close()
             display_name = email.split('@')[0] if email else user['username']
@@ -171,7 +181,7 @@ def privy_login():
 @app.route('/logout')
 def logout():
     session.pop('user', None)
-    return redirect(url_for('landing'))
+    return redirect(url_for('landing', logged_out='true'))
 
 # =================== PROTECT ROUTES ===================
 @app.before_request
@@ -641,6 +651,10 @@ def admin():
     google_form_link = ""
     recent_history = []
     total_resumes = 0
+    total_users = 0
+    total_logins = 0
+    all_users = []
+    recent_logins = []
     
     if conn:
         try:
@@ -652,6 +666,29 @@ def admin():
                 
             c.execute("SELECT COUNT(*) as total FROM history")
             total_resumes = c.fetchone()['total']
+            
+            c.execute("SELECT COUNT(*) as total FROM users")
+            total_users = c.fetchone()['total']
+            
+            c.execute("SELECT COUNT(*) as total FROM login_history")
+            total_logins = c.fetchone()['total']
+            
+            c.execute("SELECT id, username, role FROM users ORDER BY id DESC")
+            all_users = c.fetchall()
+            
+            c.execute('''
+                SELECT l.id, l.login_time, u.username 
+                FROM login_history l
+                JOIN users u ON l.user_id = u.id
+                ORDER BY l.id DESC LIMIT 10
+            ''')
+            logins_raw = c.fetchall()
+            recent_logins = [{
+                'id': l['id'],
+                'username': l['username'],
+                # Depending on how the datetime was inserted, format it nicely or return as string
+                'time': str(l['login_time'])
+            } for l in logins_raw]
             
             c.execute('''
                 SELECT h.id, h.resume_name, h.generation_date, h.template_choice, u.username 
@@ -665,7 +702,7 @@ def admin():
                 'name': item['resume_name'],
                 'user': item['username'],
                 'template': item['template_choice'],
-                'date': datetime.strptime(item['generation_date'], '%Y-%m-%d %H:%M:%S.%f').strftime('%b %d, %Y')
+                'date': datetime.strptime(item['generation_date'], '%Y-%m-%d %H:%M:%S.%f').strftime('%b %d, %Y') if '.' in item['generation_date'] else item['generation_date']
             } for item in items]
             
             c.close()
@@ -674,7 +711,78 @@ def admin():
         finally:
             conn.close()
             
-    return render_template('index.html', google_form_link=google_form_link, recent_history=recent_history, total_resumes=total_resumes, is_admin_portal=True)
+    return render_template('index.html', 
+                           google_form_link=google_form_link, 
+                           recent_history=recent_history, 
+                           total_resumes=total_resumes, 
+                           total_users=total_users,
+                           total_logins=total_logins,
+                           all_users=all_users,
+                           recent_logins=recent_logins,
+                           is_admin_portal=True)
+
+@app.route('/admin/promote', methods=['POST'])
+def promote_user():
+    user = session.get('user')
+    if not user or user.get('Role') != 'admin':
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+    
+    target_id = request.form.get('user_id')
+    if not target_id:
+        return jsonify({'success': False, 'error': 'No user ID provided'}), 400
+        
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("UPDATE users SET role='admin' WHERE id=%s", (target_id,))
+        conn.commit()
+        c.close()
+        conn.close()
+        flash("User promoted to admin successfully.", "success")
+    except Exception as e:
+        flash(f"Error promoting user: {e}", "danger")
+        
+    return redirect(url_for('admin'))
+
+@app.route('/admin/sql', methods=['POST'])
+def execute_sql():
+    user = session.get('user')
+    if not user or user.get('Role') != 'admin':
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+        
+    query = request.form.get('query', '').strip()
+    if not query:
+        flash("Query cannot be empty.", "danger")
+        return redirect(url_for('admin'))
+        
+    try:
+        conn = get_db_connection()
+        c = conn.cursor(dictionary=True)
+        c.execute(query)
+        
+        # If it's a SELECT query, fetch results
+        if query.upper().startswith("SELECT") or query.upper().startswith("SHOW"):
+            results = c.fetchall()
+            columns = results[0].keys() if results else []
+            flash(f"Query executed successfully. Returned {len(results)} rows.", "success")
+            # We would pass these results back, but since we are redirecting, we can use session or just render template
+            # For simplicity in this admin tool, we render the template directly with results
+            c.close()
+            conn.close()
+            
+            # Re-fetch the needed admin data to render the page
+            return render_template('index.html', is_admin_portal=True, sql_results=results, sql_columns=columns, sql_query=query)
+            
+        else:
+            conn.commit()
+            flash("Query executed successfully.", "success")
+            c.close()
+            conn.close()
+            return redirect(url_for('admin'))
+            
+    except Exception as e:
+        flash(f"SQL Error: {e}", "danger")
+        return redirect(url_for('admin'))
 
 # =================== ATS SCORE CALCULATOR (GROQ AI) ===================
 @app.route('/calculate-ats', methods=['POST'])
