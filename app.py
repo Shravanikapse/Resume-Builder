@@ -155,8 +155,8 @@ def privy_login():
                 
             c.close()
             conn.close()
-            
-            session['user'] = {'id': user['id'], 'Username': user['username'], 'Role': user['role']}
+            display_name = email.split('@')[0] if email else user['username']
+            session['user'] = {'id': user['id'], 'Username': display_name, 'Role': user['role']}
         except Exception as db_e:
             print(f"DB Error during Privy login, falling back to dummy session: {db_e}")
             session['user'] = {'id': 999, 'Username': 'Test User', 'Role': 'student'}
@@ -204,38 +204,18 @@ def dashboard():
             # Fetch user stats and history
             if 'user' in session:
                 user_id = session['user']['id']
-                user_role = session['user']['Role']
                 
-                if user_role == 'admin':
-                    c.execute("SELECT COUNT(*) as total FROM history")
-                    total_resumes = c.fetchone()['total']
-                    
-                    c.execute('''
-                        SELECT h.id, h.resume_name, h.generation_date, h.template_choice, u.username 
-                        FROM history h 
-                        JOIN users u ON h.user_id = u.id 
-                        ORDER BY h.id DESC LIMIT 5
-                    ''')
-                    items = c.fetchall()
-                    recent_history = [{
-                        'id': item['id'],
-                        'name': item['resume_name'],
-                        'user': item['username'],
-                        'template': item['template_choice'],
-                        'date': datetime.strptime(item['generation_date'], '%Y-%m-%d %H:%M:%S.%f').strftime('%b %d, %Y')
-                    } for item in items]
-                else:
-                    c.execute("SELECT COUNT(*) as total FROM history WHERE user_id = %s", (user_id,))
-                    total_resumes = c.fetchone()['total']
-                    
-                    c.execute("SELECT id, resume_name, generation_date, template_choice FROM history WHERE user_id = %s ORDER BY id DESC LIMIT 5", (user_id,))
-                    items = c.fetchall()
-                    recent_history = [{
-                        'id': item['id'],
-                        'name': item['resume_name'],
-                        'template': item['template_choice'],
-                        'date': datetime.strptime(item['generation_date'], '%Y-%m-%d %H:%M:%S.%f').strftime('%b %d, %Y')
-                    } for item in items]
+                c.execute("SELECT COUNT(*) as total FROM history WHERE user_id = %s", (user_id,))
+                total_resumes = c.fetchone()['total']
+                
+                c.execute("SELECT id, resume_name, generation_date, template_choice FROM history WHERE user_id = %s ORDER BY id DESC LIMIT 5", (user_id,))
+                items = c.fetchall()
+                recent_history = [{
+                    'id': item['id'],
+                    'name': item['resume_name'],
+                    'template': item['template_choice'],
+                    'date': datetime.strptime(item['generation_date'], '%Y-%m-%d %H:%M:%S.%f').strftime('%b %d, %Y')
+                } for item in items]
                     
             c.close()
         except mysql.connector.Error as err:
@@ -243,7 +223,7 @@ def dashboard():
         finally:
             conn.close()
             
-    return render_template('index.html', google_form_link=google_form_link, recent_history=recent_history, total_resumes=total_resumes)
+    return render_template('index.html', google_form_link=google_form_link, recent_history=recent_history, total_resumes=total_resumes, is_admin_portal=False)
 
 
 @app.route('/save_settings', methods=['POST'])
@@ -656,7 +636,45 @@ def admin():
     if user.get('Role') != 'admin':
         flash("You do not have permission to access the admin portal.", "danger")
         return redirect(url_for('dashboard'))
-    return redirect(url_for('dashboard'))
+        
+    conn = get_db_connection()
+    google_form_link = ""
+    recent_history = []
+    total_resumes = 0
+    
+    if conn:
+        try:
+            c = conn.cursor(dictionary=True)
+            c.execute("SELECT value_text FROM settings WHERE key_name = 'google_form_link'")
+            row = c.fetchone()
+            if row:
+                google_form_link = row['value_text']
+                
+            c.execute("SELECT COUNT(*) as total FROM history")
+            total_resumes = c.fetchone()['total']
+            
+            c.execute('''
+                SELECT h.id, h.resume_name, h.generation_date, h.template_choice, u.username 
+                FROM history h 
+                JOIN users u ON h.user_id = u.id 
+                ORDER BY h.id DESC LIMIT 5
+            ''')
+            items = c.fetchall()
+            recent_history = [{
+                'id': item['id'],
+                'name': item['resume_name'],
+                'user': item['username'],
+                'template': item['template_choice'],
+                'date': datetime.strptime(item['generation_date'], '%Y-%m-%d %H:%M:%S.%f').strftime('%b %d, %Y')
+            } for item in items]
+            
+            c.close()
+        except mysql.connector.Error as err:
+            print(f"Error fetching admin data: {err}")
+        finally:
+            conn.close()
+            
+    return render_template('index.html', google_form_link=google_form_link, recent_history=recent_history, total_resumes=total_resumes, is_admin_portal=True)
 
 # =================== ATS SCORE CALCULATOR (GROQ AI) ===================
 @app.route('/calculate-ats', methods=['POST'])
