@@ -181,7 +181,7 @@ def privy_login():
 @app.route('/logout')
 def logout():
     session.pop('user', None)
-    return redirect(url_for('landing'))
+    return redirect(url_for('landing', logged_out='true'))
 
 # =================== PROTECT ROUTES ===================
 @app.before_request

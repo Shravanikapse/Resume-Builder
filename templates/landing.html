@@ -348,8 +348,22 @@
     import { PrivyProvider, usePrivy } from '@privy-io/react-auth';
 
     function AuthHandler() {
-        const { login, ready, authenticated, getAccessToken, user } = usePrivy();
+        const { login, logout, ready, authenticated, getAccessToken, user } = usePrivy();
         const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+        // Handle logout redirection from backend
+        useEffect(() => {
+            if (ready) {
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('logged_out') === 'true') {
+                    if (authenticated) {
+                        logout();
+                    }
+                    // Clean up URL to prevent loop on refresh
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            }
+        }, [ready, authenticated, logout]);
 
         useEffect(() => {
             const loginBtn = document.getElementById('login-btn');
@@ -371,6 +385,9 @@
 
         useEffect(() => {
             async function handleSuccess() {
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('logged_out') === 'true') return; // Do not auto-login if handling logout
+                
                 if (ready && authenticated && !isLoggingIn) {
                     setIsLoggingIn(true);
                     try {
