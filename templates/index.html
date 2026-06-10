@@ -181,7 +181,7 @@
         <!-- ======================= -->
         <!-- ADMIN DASHBOARD SECTION -->
         <!-- ======================= -->
-        {% if session.user.Role == 'admin' %}
+        {% if is_admin_portal %}
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
           <!-- Bulk Generation Card -->
@@ -305,6 +305,7 @@
           </div>
           
         </div>
+        {% endif %}
 
         <!-- Table Section for Recent Generations -->
         <div class="bg-white border border-border rounded-xl p-6 shadow-sm mt-6">
@@ -322,6 +323,9 @@
                 <tr>
                   <th class="px-4 py-3 border-b border-border font-medium text-left">Date</th>
                   <th class="px-4 py-3 border-b border-border font-medium text-left">Resume Name</th>
+                  {% if is_admin_portal %}
+                  <th class="px-4 py-3 border-b border-border font-medium text-left">User</th>
+                  {% endif %}
                   <th class="px-4 py-3 border-b border-border font-medium text-left">Template</th>
                   <th class="px-4 py-3 border-b border-border font-medium text-left">Status</th>
                   <th class="px-4 py-3 border-b border-border font-medium text-right">Action</th>
@@ -332,6 +336,9 @@
                 <tr class="hover:bg-secondary/30 transition-colors">
                   <td class="px-4 py-3 text-muted-foreground">{{ item.date }}</td>
                   <td class="px-4 py-3 font-medium">{{ item.name }}</td>
+                  {% if is_admin_portal %}
+                  <td class="px-4 py-3 text-muted-foreground">{{ item.user }}</td>
+                  {% endif %}
                   <td class="px-4 py-3 text-muted-foreground">
                     {% if item.template == 'template1.html' %} Classic Print {% else %} Modern Side-Column {% endif %}
                   </td>
@@ -357,7 +364,6 @@
           </div>
         </div>
 
-        {% endif %}
         
       </div>
     </div>
