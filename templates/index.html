@@ -182,7 +182,39 @@
         <!-- ADMIN DASHBOARD SECTION -->
         <!-- ======================= -->
         {% if is_admin_portal %}
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Analytics Top Row -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div class="bg-white border border-border rounded-xl p-6 flex items-center justify-between shadow-sm">
+            <div>
+              <p class="text-sm text-muted-foreground font-medium mb-1">Total Users</p>
+              <h4 class="text-3xl font-bold text-foreground">{{ total_users }}</h4>
+            </div>
+            <div class="h-12 w-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+              <i data-lucide="users" class="h-6 w-6"></i>
+            </div>
+          </div>
+          <div class="bg-white border border-border rounded-xl p-6 flex items-center justify-between shadow-sm">
+            <div>
+              <p class="text-sm text-muted-foreground font-medium mb-1">Total Resumes</p>
+              <h4 class="text-3xl font-bold text-foreground">{{ total_resumes }}</h4>
+            </div>
+            <div class="h-12 w-12 rounded-full bg-purple-50 flex items-center justify-center text-purple-600">
+              <i data-lucide="file-text" class="h-6 w-6"></i>
+            </div>
+          </div>
+          <div class="bg-white border border-border rounded-xl p-6 flex items-center justify-between shadow-sm">
+            <div>
+              <p class="text-sm text-muted-foreground font-medium mb-1">Total Logins</p>
+              <h4 class="text-3xl font-bold text-foreground">{{ total_logins }}</h4>
+            </div>
+            <div class="h-12 w-12 rounded-full bg-green-50 flex items-center justify-center text-green-600">
+              <i data-lucide="log-in" class="h-6 w-6"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Tools Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           
           <!-- Bulk Generation Card -->
           <div class="bg-white border border-border rounded-xl p-6 flex flex-col shadow-sm relative overflow-hidden group">
@@ -212,31 +244,130 @@
             </form>
           </div>
           
-          <!-- Google Form Config Card -->
+          <!-- User Management & Admins -->
           <div class="bg-white border border-border rounded-xl p-6 flex flex-col shadow-sm relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-1 bg-green-500"></div>
+            <div class="absolute top-0 left-0 w-full h-1 bg-blue-500"></div>
             <div class="flex items-center gap-3 mb-4">
-              <div class="h-10 w-10 rounded-md bg-green-500/10 flex items-center justify-center text-green-600">
-                <i data-lucide="link" class="h-5 w-5"></i>
+              <div class="h-10 w-10 rounded-md bg-blue-500/10 flex items-center justify-center text-blue-600">
+                <i data-lucide="shield-alert" class="h-5 w-5"></i>
               </div>
-              <h3 class="text-xl font-semibold text-foreground tracking-tight">Google Form Link</h3>
+              <h3 class="text-xl font-semibold text-foreground tracking-tight">User Management</h3>
             </div>
-            <p class="text-muted-foreground text-sm mb-6">
-              Provide students a Google Form URL where they submit data. Saves directly to students' dashboard views.
+            <p class="text-muted-foreground text-sm mb-4">
+              Promote students to administrators. Be careful, admins have full access.
             </p>
-            
-            {% if google_form_link %}
-            <button onclick="copyFormLink('{{ google_form_link }}')" class="w-full bg-white border border-border text-foreground font-medium py-3 rounded-md text-sm hover:bg-secondary transition-colors shadow-sm flex items-center justify-center gap-2">
-              <i data-lucide="copy" class="h-4 w-4 text-muted-foreground"></i> Copy Shareable Form Link
-            </button>
-            <div class="mt-4 p-4 bg-secondary/50 rounded-lg border border-border text-xs text-muted-foreground break-all text-center">
-              {{ google_form_link }}
+            <div class="flex-1 overflow-y-auto max-h-[200px] border border-border rounded-md">
+              <table class="w-full text-left text-sm">
+                <thead class="bg-secondary sticky top-0">
+                  <tr>
+                    <th class="px-3 py-2 font-medium">Username</th>
+                    <th class="px-3 py-2 font-medium">Role</th>
+                    <th class="px-3 py-2 font-medium text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-border">
+                  {% for u in all_users %}
+                  <tr>
+                    <td class="px-3 py-2 truncate max-w-[120px]">{{ u.username }}</td>
+                    <td class="px-3 py-2">
+                      {% if u.role == 'admin' %}
+                        <span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">Admin</span>
+                      {% else %}
+                        <span class="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider">Student</span>
+                      {% endif %}
+                    </td>
+                    <td class="px-3 py-2 text-right">
+                      {% if u.role != 'admin' %}
+                      <form action="{{ url_for('promote_user') }}" method="POST" class="inline">
+                        <input type="hidden" name="user_id" value="{{ u.id }}">
+                        <button type="submit" class="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition-colors">Make Admin</button>
+                      </form>
+                      {% else %}
+                      <span class="text-xs text-muted-foreground italic">Superuser</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
             </div>
-            {% else %}
-            <div class="flex items-center justify-center flex-1 bg-secondary border border-border border-dashed rounded-lg">
-                <p class="text-sm text-muted-foreground">No Google Form link configured.</p>
+          </div>
+          
+        </div>
+
+        <!-- Lower Row: SQL and Logins -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          <!-- SQL Console -->
+          <div class="bg-white border border-border rounded-xl p-6 flex flex-col shadow-sm relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-red-500"></div>
+            <div class="flex items-center gap-3 mb-4">
+              <div class="h-10 w-10 rounded-md bg-red-500/10 flex items-center justify-center text-red-600">
+                <i data-lucide="database" class="h-5 w-5"></i>
+              </div>
+              <h3 class="text-xl font-semibold text-foreground tracking-tight">SQL Console</h3>
+            </div>
+            
+            <form action="{{ url_for('execute_sql') }}" method="POST" class="flex flex-col gap-3">
+              <textarea name="query" rows="2" placeholder="SELECT * FROM users LIMIT 10;" required class="w-full px-3 py-2 bg-secondary border border-border rounded-md text-sm font-mono focus:outline-none focus:ring-2 focus:ring-red-500 transition-all"></textarea>
+              <button type="submit" class="self-end bg-red-600 text-white font-medium py-1.5 px-4 rounded-md text-sm hover:bg-red-700 transition-colors shadow-sm flex items-center gap-2">
+                <i data-lucide="play" class="h-3 w-3"></i> Run Query
+              </button>
+            </form>
+            
+            {% if sql_query %}
+            <div class="mt-4 pt-4 border-t border-border">
+              <p class="text-xs font-mono text-muted-foreground mb-2 truncate">> {{ sql_query }}</p>
+              <div class="overflow-x-auto overflow-y-auto max-h-[200px] border border-border rounded text-xs bg-secondary">
+                <table class="min-w-full divide-y divide-border text-left">
+                  <thead class="bg-gray-100">
+                    <tr>
+                      {% for col in sql_columns %}
+                      <th class="px-2 py-1.5 font-medium whitespace-nowrap">{{ col }}</th>
+                      {% endfor %}
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-border bg-white">
+                    {% for row in sql_results %}
+                    <tr>
+                      {% for col in sql_columns %}
+                      <td class="px-2 py-1.5 whitespace-nowrap">{{ row[col] }}</td>
+                      {% endfor %}
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
             </div>
             {% endif %}
+          </div>
+          
+          <!-- Recent Logins -->
+          <div class="bg-white border border-border rounded-xl p-6 flex flex-col shadow-sm relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-orange-500"></div>
+            <div class="flex items-center gap-3 mb-4">
+              <div class="h-10 w-10 rounded-md bg-orange-500/10 flex items-center justify-center text-orange-600">
+                <i data-lucide="activity" class="h-5 w-5"></i>
+              </div>
+              <h3 class="text-xl font-semibold text-foreground tracking-tight">Recent Logins</h3>
+            </div>
+            <div class="flex-1 overflow-y-auto max-h-[250px]">
+              <div class="flex flex-col gap-3">
+                {% for login in recent_logins %}
+                <div class="flex items-center justify-between border-b border-border pb-2 last:border-0">
+                  <div class="flex items-center gap-2">
+                    <div class="h-8 w-8 rounded-full bg-secondary flex items-center justify-center text-xs font-medium border border-border">
+                      {{ login.username[0]|upper }}
+                    </div>
+                    <span class="text-sm font-medium">{{ login.username }}</span>
+                  </div>
+                  <span class="text-xs text-muted-foreground">{{ login.time }}</span>
+                </div>
+                {% else %}
+                <p class="text-sm text-muted-foreground text-center py-4">No recent logins tracked.</p>
+                {% endfor %}
+              </div>
+            </div>
           </div>
           
         </div>
